@@ -36,6 +36,10 @@ int FIFO_player;
 
 int init(int massimo,int ptg_vittoria);
 
+void listenPlayer();
+
+void gestioneASKandANS();
+
 //----------------------------------------------------------------------------
 
 
