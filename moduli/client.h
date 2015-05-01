@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 //FIFO giocatori
-int FIFO_player[2];
+int FIFO_player_CL[2];
 
 //FIFO partita
 int FIFO_game[2];

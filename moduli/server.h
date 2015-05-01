@@ -2,7 +2,7 @@
 #define SERVER_H
 
 #include <fcntl.h>
-
+#include <pthread.h>
 //-----------------DEFINIZIONI VARIABILI E STRUTTURE --------------------------
 
 //STRUTTURA CHE DEFINISCE UN PLAYER CON PID, PUNTEGGIO e RELATIVE FIFO
@@ -22,7 +22,7 @@ int WIN;
 int ACTIVE_PLAYER;
 
 //Lista dei giocatori attivi
-struct PLAYER * players;
+struct PLAYER players[10];
 
 //FIFO Giocatori
 int FIFO_player;
@@ -30,13 +30,16 @@ int FIFO_player;
 //FILE Mode FIFO
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 
+
+//ID thread connessioni
+pthread_t THREAD_CONN;
 //------------------------------------------------------------------------------
 
 //-----------------DEFINIZIONE FIRME FUNZIONI server.c-------------------------
 
 int init(int massimo,int ptg_vittoria);
 
-void listenPlayer();
+void *listenPlayer();
 
 void gestioneASKandANS();
 

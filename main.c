@@ -1,8 +1,9 @@
--#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include "moduli/server.h"
+#include "moduli/client.h"
 
 int startServer(char * n_max,char * max,char * n_win,char * win);
 
@@ -64,13 +65,12 @@ int main(int argc,char** argv)
         printf("Il server è stato creato\n");
     }
     else if((strcmp(argv[1],"client"))==0){
-    
+        init_client();
     }
     else{
         perror("Arguments Error: use <server|client> --optional_args\n");
         exit(1);
     }
-    exit(0);
 }
 
 int startServer(char * n_max,char * max,char * n_win,char * win)   
