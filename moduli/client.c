@@ -12,13 +12,7 @@ int init_client(){
     char BUFFER[255];
     if((FIFO_player_CL[0] = open("fifo_player",O_WRONLY | O_NONBLOCK))<0)
     {
-        printf("CLIENT\n");
-        if(errno == EEXIST)
-        {
-            perror("FIFO:");  //non c'è server
-            exit(1);
-        }
-        perror("ERROR:");
+        perror("ERROR:"); //non c'è server
         exit(1);
         
     }
