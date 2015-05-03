@@ -15,27 +15,39 @@ int init_client(){
         printf("CLIENT\n");
         if(errno == EEXIST)
         {
-            return -3;  //non c'è server
+            perror("FIFO:");  //non c'è server
+            exit(1);
         }
-        char * pid;
-        sprintf(pid, "%i", getpid());
-        write(FIFO_player_CL[0], strcat(pid,'\0'), sizeof(pid)+1);
-        mkfifo(strcat(pid,"fifo_player"), FILE_MODE);
-        FIFO_player_CL[1] = open(strcat(pid,"fifo_player"),O_RDONLY | O_NONBLOCK);
-        while(read(FIFO_player_CL[1], BUFFER, sizeof(BUFFER))==0);
-        if (atoi(BUFFER)==-1){
-            return -3;
-        } 
-        printf("Connesso!");
-        unlink(strcat("fifo_player",pid));
+        perror("ERROR:");
+        exit(1);
         
     }
-    return -1;
+    char pid [20];
+    char tmp_pid [20];
+    sprintf(tmp_pid,"%d",getpid());
+    sprintf(pid,"%d",getpid());
+    strcat(tmp_pid,"fifo_player");
+    printf("%s\n",pid);
+    mkfifo(tmp_pid,FILE_MODE);
+    write(FIFO_player_CL[0],pid, sizeof(pid));
+    FIFO_player_CL[1] = open(tmp_pid,O_RDONLY);
+    while(read(FIFO_player_CL[1], BUFFER, 255)==0);
+    printf("%s\n",BUFFER);
+    //CONTROLLO SE IL SERVER é PRONTO PER ACCOGLIERE ALTRE CONNESSIONI.
+    if (strcmp(BUFFER,"NO")==0){
+        printf("SERVER AL COMPLETO");
+        unlink(tmp_pid);
+        exit(1);
+    } 
+    printf("Connesso!\n");
+    unlink(tmp_pid);
+    
+    
 }
 
 //funzione che mostra in output la domanda posta dal server e attende che l'utente inserisca una risposta pe rpoi inviarla
 //FIFO_game[0] è la fifo da server verso client, FIFO_game[1] è la fifo da client verso server
-void ascoltaServer(){
+void *ascoltaServer(){
     char BUFFER[255];
     open("fifo_game_toC", getpid() , O_RDONLY | O_NONBLOCK);
     while(1){

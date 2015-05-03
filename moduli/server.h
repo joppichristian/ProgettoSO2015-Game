@@ -7,7 +7,7 @@
 
 //STRUTTURA CHE DEFINISCE UN PLAYER CON PID, PUNTEGGIO e RELATIVE FIFO
 struct PLAYER{
-    int pid;
+    char* pid;
     int punteggio;
     int FIFO_game [2]; 
 };
