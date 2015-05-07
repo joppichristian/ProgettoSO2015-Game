@@ -45,57 +45,85 @@ int init(int massimo,int ptg_vittoria){
 void *listenPlayer(){
     printf("Entro nel listener giocatori\n");
     char BUFFER [255];
-    int tmp;
+    char* tmp;
     int FIFO_player_ANSW;
+    int THREAD_GAME [MAX];
     while(1){
         strcpy(BUFFER,"");
-        while(read(FIFO_player,BUFFER,255)==0);
-        char* tmp = BUFFER;
-        strcat(BUFFER,"fifo_player");
-        printf("%s\n",BUFFER);;
-        if((FIFO_player_ANSW = open(BUFFER,O_WRONLY))<0)
+        read(FIFO_player,BUFFER,255);
+        if(strlen(BUFFER)!=0){
+            char tmp [30];
+            strcpy(tmp,BUFFER);
+            strcat(BUFFER,"fifo_player");
+            if((FIFO_player_ANSW = open(BUFFER,O_WRONLY))<0)
+                {
+                    perror("Errore di apertura FIFO ANSW");
+                    unlink("fifo_player");
+                    pthread_exit(NULL);
+                }
+            if(ACTIVE_PLAYER < MAX)
             {
-                perror("Errore santo dio");
-                unlink("fifo_player");
-                pthread_exit(NULL);
+
+                printf("HO LETTO E CREATO LA FIFO %s GIOCATORI ISCRITTI: %i \n",BUFFER,ACTIVE_PLAYER);
+                write(FIFO_player_ANSW,"OK\0",3);
+
+                //MUTEX LOCK
+                pthread_mutex_lock(&PLAYER_MUTEX);
+                
+                strcpy(players[ACTIVE_PLAYER].pid,tmp);
+                players[ACTIVE_PLAYER].punteggio = 0;
+                
+                //Creo la FIFO per la risposta al server
+                strcat(tmp,"fifo_game_toS");
+                mkfifo(tmp,FILE_MODE);
+                if((players[ACTIVE_PLAYER].FIFO_game[0] = open(BUFFER,O_RDONLY | O_NONBLOCK))<0)
+                    perror("FIFO_toS");
+                //
+                
+                strcpy(tmp,players[ACTIVE_PLAYER].pid);
+                 printf("BUFFER: %s\n",tmp);
+                //Creo la FIFO per l'invio della domanda al client
+                strcat(tmp,"fifo_game_toC");
+                mkfifo(tmp,FILE_MODE);
+                players[ACTIVE_PLAYER].FIFO_game[1] = open(BUFFER,O_WRONLY | O_NONBLOCK);
+                //
+                
+                pthread_create(&THREAD_GAME[ACTIVE_PLAYER],NULL,(void*)&gestioneASKandANS,NULL);
+                ACTIVE_PLAYER++;
+                
+                //MUTEX UNLOCK
+                pthread_mutex_unlock(&PLAYER_MUTEX);
+                
+               
+               
+                
+                //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
+                
+                
+                
             }
-        if(ACTIVE_PLAYER < MAX)
-        {
-           
-            printf("HO LETTO E CREATO LA FIFO %s GIOCATORI ISCRITTI: %i \n",BUFFER,ACTIVE_PLAYER);
-            write(FIFO_player_ANSW,"OK\0",3);
-            players[ACTIVE_PLAYER].pid = tmp;
-            players[ACTIVE_PLAYER].punteggio = 0;
-            write(FIFO_player_ANSW,"OK\0",3);
-            /*strcpy(BUFFER,tmp);
-            strcat(BUFFER,"fifo_game_toS");
-            mkfifo(BUFFER,FILE_MODE);
-            if((players[ACTIVE_PLAYER].FIFO_game[0] = open(BUFFER,O_RDONLY))<0)
-                perror("FIFO in entrata");
-            strcpy(BUFFER,tmp);
-            strcat(BUFFER,"fifo_game_toC")
-            mkfifo(BUFFER,FILE_MODE);
-            if((players[ACTIVE_PLAYER].FIFO_game[1] = open(BUFFER,O_WRONLY))<0)
-                perror("FIFO in uscita");
-           
-            */
-            //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
-            ACTIVE_PLAYER++;
+            else
+            {
+                printf("CODA PIENA");
+                write(FIFO_player_ANSW,"NO\0",3);
+            }
         }
-        else
-        {
-            printf("CODA PIENA");
-            write(FIFO_player_ANSW,"NO\0",3);
-        }
+
     }
-    
     pthread_exit(NULL);
+    
 
 }
 
 
-void gestioneASKandANS(){
-    
+void *gestioneASKandANS(){
+    //CREA DOMANDA
+    //INVIA DOMANDA 
+    //CICLO
+    //ASPETTA RISPOSTA
+    //CONTROLLA RISPOSTA
+        //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E RICOMiNCIO
+    //FINE CICLO
 }
 
 

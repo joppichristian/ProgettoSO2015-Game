@@ -7,7 +7,7 @@
 
 //STRUTTURA CHE DEFINISCE UN PLAYER CON PID, PUNTEGGIO e RELATIVE FIFO
 struct PLAYER{
-    char* pid;
+    char pid [30];
     int punteggio;
     int FIFO_game [2]; 
 };
@@ -33,6 +33,14 @@ int FIFO_player;
 
 //ID thread connessioni
 pthread_t THREAD_CONN;
+
+//MUTEX sui player
+pthread_mutex_t PLAYER_MUTEX;
+
+//ULTIMA DOMANDA INVIATA
+char domanda [30];
+
+
 //------------------------------------------------------------------------------
 
 //-----------------DEFINIZIONE FIRME FUNZIONI server.c-------------------------
@@ -41,7 +49,7 @@ int init(int massimo,int ptg_vittoria);
 
 void *listenPlayer();
 
-void gestioneASKandANS();
+void *gestioneASKandANS();
 
 //----------------------------------------------------------------------------
 
