@@ -39,15 +39,31 @@ int init_client(){
     
 }
 
-//funzione che mostra in output la domanda posta dal server e attende che l'utente inserisca una risposta pe rpoi inviarla
+//funzione che mostra in output la domanda posta dal server e attende che l'utente inserisca una risposta per poi inviarla
 //FIFO_game[0] è la fifo da server verso client, FIFO_game[1] è la fifo da client verso server
 void *ascoltaServer(){
     char BUFFER[255];
-    open("fifo_game_toC", getpid() , O_RDONLY | O_NONBLOCK);
+    char tmp_pid [20];
+    char risposta[10];
+    sprintf(tmp_pid,"%d",getpid());
+    strcat(tmp_pid,"fifo_game_toC");
+    open(tmp_pid, O_RDONLY);
     while(1){
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
-        printf("%s\n", BUFFER);
-        dup2(0,FIFO_game[1]);
-    }
-    
+            if (strcmp(BUFFER,"0") != 0){
+            risposta = QuestANDAnsw(BUFFER);
+            strcat(tmp_pid,"fifo_game_toC");
+            open(tmp_pid,"fifo_game_toS", O_WRONLY);
+            write(FIFO_game[1]),risposta, sizeof(risposta));
+            }
+    }    
+}
+
+//mostra in output la domanda e attende la risposta dell'utente
+
+char* QuestANDAnsw(char domanda){
+    printf("%s\n", domanda);
+    char * risposta[10];
+    scanf(risposta);
+    return risposta;
 }
