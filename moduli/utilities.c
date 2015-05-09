@@ -36,8 +36,17 @@ void printMessage(char messages [], char type[]){
             strcat(tmp,ANSI_COLOR_RESET);
             printf ("%s\n",tmp);
         }
+        else if (strcmp(type,"log")==0){
+               tmp=(char *)malloc(sizeof(char)*(strlen(ANSI_COLOR_MAGENTA)+strlen(ANSI_COLOR_RESET)+strlen(messages) +1));
+                strcpy(tmp,ANSI_COLOR_MAGENTA);
+                strcat(tmp,messages);
+                strcat(tmp,ANSI_COLOR_RESET);
+                printf ("%s\n",tmp);
+            }
+    
     free(tmp);
 }
+
 int getRandom(){
     srand(time(NULL));
     int r = rand() % 100;

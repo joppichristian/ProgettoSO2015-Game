@@ -24,17 +24,17 @@ int init(int massimo,int ptg_vittoria){
     {
         if(errno!= EEXIST)
         {
-            perror("Errore creazione FIFO player");
+            printMessage("Error creating FIFO player.\n", "error");
             exit(1);
         }
         //ERRNO != EEXIST
-         perror("Già esistente");
+        printMessage("FIFO player already exists.\n", "error");
     }
     else
     {
         if((FIFO_player = open("fifo_player",O_RDONLY))<0)
-            perror("Errore di apertura FIFO");
-        printf("FIFO CREATA\n");
+            printMessage("Error opening FIFO.\n", "error");
+            printMessage("FIFO successfully created.\n", "confirm"); 
         pthread_create(&THREAD_CONN,NULL,(void*)&listenPlayer,NULL);
         pthread_join(THREAD_CONN, NULL);
         
@@ -44,7 +44,7 @@ int init(int massimo,int ptg_vittoria){
 }
 
 void *listenPlayer(){
-    printMessage("Entro nel listener giocatori\n","confirm");
+    printMessage("Entering listener player\n","confirm");
     char BUFFER [255];
     char* tmp;
     int FIFO_player_ANSW;
@@ -58,7 +58,7 @@ void *listenPlayer(){
             strcat(BUFFER,"fifo_player");
             if((FIFO_player_ANSW = open(BUFFER,O_WRONLY))<0)
                 {
-                    perror("Errore di apertura FIFO ANSW");
+                    printMessage("Error opening FIFO ANSW.\n", "error");
                     unlink("fifo_player");
                     pthread_exit(NULL);
                 }
@@ -102,7 +102,7 @@ void *listenPlayer(){
             }
             else
             {
-                printMessage("CODA PIENA","ERROR");
+                printMessage("QUEUE IS FULL.\n","error");
                 write(FIFO_player_ANSW,"NO\0",3);
             }
         }

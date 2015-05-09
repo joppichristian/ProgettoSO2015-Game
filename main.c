@@ -13,7 +13,7 @@ int main(int argc,char** argv)
     int esito;
     if(argc< 2)
     {
-            perror("Arguments Error: use <server|client> --optional_args\n");
+            printMessage("Arguments Error: use <server|client> --optional_args\n", "error");
             exit(1);
     }
    
@@ -68,7 +68,7 @@ int main(int argc,char** argv)
         init_client();
     }
     else{
-        perror("Arguments Error: use <server|client> --optional_args\n");
+        printMessage("Arguments Error: use <server|client> --optional_args\n", "error");
         exit(1);
     }
 }

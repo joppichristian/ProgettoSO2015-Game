@@ -13,7 +13,7 @@ int init_client(){
     char BUFFER[255];
     if((FIFO_player_CL[0] = open("fifo_player",O_WRONLY | O_NONBLOCK))<0)
     {
-        perror("ERROR:"); //non c'è server
+        printMessage("Server does not exist.\n", "error");perror("ERROR:"); //non c'è server
         exit(1);
         
     }
@@ -30,11 +30,11 @@ int init_client(){
     printf("%s\n",BUFFER);
     //CONTROLLO SE IL SERVER é PRONTO PER ACCOGLIERE ALTRE CONNESSIONI.
     if (strcmp(BUFFER,"NO")==0){
-        printf("SERVER AL COMPLETO");
+        printMessage("SERVER IS FULL.\n", "warning");
         unlink(tmp_pid);
         exit(1);
     } 
-    printf("Connesso!\n");
+    printMessage("Connected!\n", "log");
     unlink(tmp_pid);
     pthread_create(&THascolto,NULL,(void*)&ascoltaServer,NULL);
     pthread_join(THascolto, NULL);
@@ -63,7 +63,7 @@ void *ascoltaServer(){
 
 //mostra in output la domanda e attende la risposta dell'utente
 
-char* QuestANDAnsw(char *domanda){
+char* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     printMessage(domanda,"confirm");
     char * risposta;
     scanf("%s",risposta);
