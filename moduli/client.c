@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "client.h"
+#include "utilities.h"
 #include <sys/errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -35,7 +36,8 @@ int init_client(){
     } 
     printf("Connesso!\n");
     unlink(tmp_pid);
-    
+    pthread_create(&THascolto,NULL,(void*)&ascoltaServer,NULL);
+    pthread_join(THascolto, NULL);
     
 }
 
@@ -51,19 +53,19 @@ void *ascoltaServer(){
     while(1){
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
             if (strcmp(BUFFER,"0") != 0){
-            risposta = QuestANDAnsw(BUFFER);
+            char * risposta = QuestANDAnsw(BUFFER);
             strcat(tmp_pid,"fifo_game_toC");
             open(tmp_pid,"fifo_game_toS", O_WRONLY);
-            write(FIFO_game[1]),risposta, sizeof(risposta));
+            write(FIFO_game[1],risposta, sizeof(risposta));
             }
     }    
 }
 
 //mostra in output la domanda e attende la risposta dell'utente
 
-char* QuestANDAnsw(char domanda){
-    printf("%s\n", domanda);
-    char * risposta[10];
-    scanf(risposta);
+char* QuestANDAnsw(char *domanda){
+    printMessage(domanda,"confirm");
+    char * risposta;
+    scanf("%s",risposta);
     return risposta;
 }

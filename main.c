@@ -4,13 +4,13 @@
 #include <string.h>
 #include "moduli/server.h"
 #include "moduli/client.h"
+#include "moduli/utilities.h"
 
 int startServer(char * n_max,char * max,char * n_win,char * win);
 
 int main(int argc,char** argv)
 {       
     int esito;
-    
     if(argc< 2)
     {
             perror("Arguments Error: use <server|client> --optional_args\n");
@@ -58,7 +58,7 @@ int main(int argc,char** argv)
         {
             if((esito = startServer("","","","")) != 0)
             {
-                perror(esito);
+                printf("%i",esito);
                 exit(1);
             }
         }

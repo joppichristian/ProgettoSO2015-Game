@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "server.h"
+#include "utilities.h"
 #include <sys/errno.h>
 #include <stdlib.h>
 #include <string.h>
 
-pthread_attr_t attr;
 
 //-------------------- DEFINIZIONE FUNZIONI ------------------------
 
 //inizializza il server impostando il numero massimo di giocatori e il punteggio di vittoria
 int init(int massimo,int ptg_vittoria){
+    strcpy(domanda,"");
     if(massimo < 1 || massimo > 10)
         return -1;
     MAX = massimo;
@@ -43,11 +44,11 @@ int init(int massimo,int ptg_vittoria){
 }
 
 void *listenPlayer(){
-    printf("Entro nel listener giocatori\n");
+    printMessage("Entro nel listener giocatori\n","confirm");
     char BUFFER [255];
     char* tmp;
     int FIFO_player_ANSW;
-    int THREAD_GAME [MAX];
+    pthread_t THREAD_GAME [MAX];
     while(1){
         strcpy(BUFFER,"");
         read(FIFO_player,BUFFER,255);
@@ -76,7 +77,7 @@ void *listenPlayer(){
                 //Creo la FIFO per la risposta al server
                 strcat(tmp,"fifo_game_toS");
                 mkfifo(tmp,FILE_MODE);
-                if((players[ACTIVE_PLAYER].FIFO_game[0] = open(BUFFER,O_RDONLY | O_NONBLOCK))<0)
+                if((players[ACTIVE_PLAYER].FIFO_game[0] = open(BUFFER,O_RDONLY))<0)
                     perror("FIFO_toS");
                 //
                 
@@ -85,26 +86,23 @@ void *listenPlayer(){
                 //Creo la FIFO per l'invio della domanda al client
                 strcat(tmp,"fifo_game_toC");
                 mkfifo(tmp,FILE_MODE);
-                players[ACTIVE_PLAYER].FIFO_game[1] = open(BUFFER,O_WRONLY | O_NONBLOCK);
+                players[ACTIVE_PLAYER].FIFO_game[1] = open(BUFFER,O_WRONLY);
                 //
                 
+                //CREA DOMANDA
+                makeAsk();
+                printMessage(domanda,"warning");
+                //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
                 pthread_create(&THREAD_GAME[ACTIVE_PLAYER],NULL,(void*)&gestioneASKandANS,NULL);
                 ACTIVE_PLAYER++;
                 
                 //MUTEX UNLOCK
                 pthread_mutex_unlock(&PLAYER_MUTEX);
                 
-               
-               
-                
-                //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
-                
-                
-                
             }
             else
             {
-                printf("CODA PIENA");
+                printMessage("CODA PIENA","ERROR");
                 write(FIFO_player_ANSW,"NO\0",3);
             }
         }
@@ -117,13 +115,28 @@ void *listenPlayer(){
 
 
 void *gestioneASKandANS(){
-    //CREA DOMANDA
-    //INVIA DOMANDA 
+   //INVIA DOMANDA
+    char risposta [30];
+    while(1){
+        
+        write(players[ACTIVE_PLAYER].FIFO_game[1],domanda,sizeof(domanda));
+        while(read(players[ACTIVE_PLAYER].FIFO_game[0],risposta,255)==0);
+    }
     //CICLO
     //ASPETTA RISPOSTA
     //CONTROLLA RISPOSTA
         //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E RICOMiNCIO
     //FINE CICLO
+}
+
+void makeAsk(){
+    char a [3]; 
+    char b [3];
+    sprintf(a,"%d",getRandom());
+    strcpy(domanda,a);
+    strcat(domanda,"+");
+    sprintf(b,"%d",getRandom());
+    strcat(domanda,b);
 }
 
 

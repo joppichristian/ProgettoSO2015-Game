@@ -51,6 +51,8 @@ void *listenPlayer();
 
 void *gestioneASKandANS();
 
+void makeAsk();
+
 //----------------------------------------------------------------------------
 
 

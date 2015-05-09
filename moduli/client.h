@@ -2,6 +2,7 @@
 #define CLIENT_H
 
 #include <fcntl.h>
+#include <pthread.h>
 //-----------------DEFINIZIONI VARIABILI E STRUTTURE --------------------------
 //FIFO giocatori
 int FIFO_player_CL[2];
@@ -11,6 +12,10 @@ int FIFO_game[2];
 
 //FILE Mode FIFO
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+
+//Thread di ascolto
+pthread_t THascolto;
+
 //-----------------------------------------------------------------------------
 
 //-----------------DEFINIZIONE FIRME FUNZIONI client.c-------------------------
@@ -19,7 +24,7 @@ int init_client();
 
 void *ascoltaServer();
 
-char* QuestANDAnsw(char domanda);
+char* QuestANDAnsw(char * domanda);
 
 //-----------------------------------------------------------------------------
 #endif

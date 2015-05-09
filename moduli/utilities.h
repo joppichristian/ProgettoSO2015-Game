@@ -11,6 +11,8 @@ char type[30]; //= {error, warning, confirm};
 
 //-----------------DEFINIZIONE FIRME FUNZIONI utilities.c-------------------------
 
-void printMessage(char messages, char type); //vanno *?
+void printMessage(char messages[], char type []);
+
+int getRandom();
 
 #endif
