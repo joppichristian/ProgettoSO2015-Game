@@ -67,7 +67,7 @@ void *listenPlayer(){
             if(ACTIVE_PLAYER < MAX)
             {
 
-                printf("HO LETTO E CREATO LA FIFO %s GIOCATORI ISCRITTI: %i \n",BUFFER,ACTIVE_PLAYER);
+                printf("HO LETTO E CREATO LA FIFO %s GIOCATORI ISCRITTI: %i \n",BUFFER,ACTIVE_PLAYER+1);
                 write(FIFO_player_ANSW,"OK\0",3);
 
                 //MUTEX LOCK
@@ -121,7 +121,6 @@ void *listenPlayer(){
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
     printMessage(domanda,"warning");
-    printf("%d\n",giocatore);
     char _risposta [30];
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     //CICLO

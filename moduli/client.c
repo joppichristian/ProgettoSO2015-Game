@@ -52,7 +52,6 @@ void *ascoltaServer(){
     sprintf(tmp_pid,"%d",getpid());
     strcat(tmp_pid,"fifo_game_toC");
     printMessage("Sto ascoltanto le domande dal server","warning");
-    printf("FIFO: %s\n",tmp_pid);
     FIFO_game[0] = open(tmp_pid, O_RDONLY );
     while(1){
         while((read(FIFO_game[0], BUFFER, sizeof(BUFFER)))==0);
