@@ -1,3 +1,5 @@
 a.out
-moduli/*.gch
+moduli/client.h.gch
+moduli/server.h.gch
+moduli/utilities.h.gch
 a.out.dSYM
