@@ -1,4 +1,3 @@
 a.out
-moduli/client.h.gch
-moduli/server.h.gch
+moduli/*.gch
 a.out.dSYM
