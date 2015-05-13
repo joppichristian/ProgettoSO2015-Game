@@ -96,6 +96,6 @@ char* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     printMessage(domanda,"confirm");
     char *risposta = (char*)malloc(3*sizeof(char));
     scanf("%s",risposta);
-    printf("%s",risposta);
+    //printf("%s",risposta);
     return risposta;
 }
