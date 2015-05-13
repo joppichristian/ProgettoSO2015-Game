@@ -18,13 +18,13 @@ default:
 
 all:
 	gcc main.c moduli/client.c moduli/client.h moduli/server.c moduli/server.h moduli/utilities.h moduli/utilities.c
-	rm fifo_player
-
-bin: gcc -c -o /luisazurlo/GitHub/ProgettoSO2015-Game/bin/
+bin:
+	gcc -c -o /luisazurlo/GitHub/ProgettoSO2015-Game/bin/
 
 assets:
 
 test:
 
-clean: rm fifo_player
+clean:
+	rm fifo_player
 
