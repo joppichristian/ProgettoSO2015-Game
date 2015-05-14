@@ -27,7 +27,6 @@ int init_client(){
     write(FIFO_player_CL[0],pid, sizeof(pid));
     FIFO_player_CL[1] = open(tmp_pid,O_RDONLY);
     while(read(FIFO_player_CL[1], BUFFER, 255)==0);
-    printf("%s\n",BUFFER);
     //CONTROLLO SE IL SERVER é PRONTO PER ACCOGLIERE ALTRE CONNESSIONI.
     if (strcmp(BUFFER,"NO")==0){
         printMessage("SERVER IS FULL.", "warning");
@@ -44,9 +43,9 @@ int init_client(){
 //funzione che mostra in output la domanda posta dal server e attende che l'utente inserisca una risposta per poi inviarla
 //FIFO_game[0] è la fifo da server verso client, FIFO_game[1] è la fifo da client verso server
 void *ascoltaServer(){
-    
+    pthread_t THREAD_LETTURA;
     char BUFFER[255];
-    char _domanda[6];
+    char _domanda[10];
     char tmp_pid [20];
     char risposta[10];
     sprintf(tmp_pid,"%d",getpid());
@@ -54,48 +53,51 @@ void *ascoltaServer(){
     printMessage("Sto ascoltanto le domande dal server","warning");
     FIFO_game[0] = open(tmp_pid, O_RDONLY );
     while(1){
-        while((read(FIFO_game[0], BUFFER, sizeof(BUFFER)))==0);
+        read(FIFO_game[0], BUFFER, sizeof(BUFFER));
             if (strlen(BUFFER) != 0){
+                pthread_destroy(THREAD_LETTURA);
                 //CONTROLLO CHE IL MESSAGGIO NON SIA UNA COMUNICAZIONE DEL SERVER MA UNA DOMANDA!
                 if(((int)BUFFER[0]) > 47 && (((int)BUFFER[0]) < 58)) {
+                    
                     strcpy(_domanda,BUFFER);
-                    char * risposta = QuestANDAnsw(_domanda);
-                    printMessage(tmp_pid,"log");
-                    sprintf(tmp_pid,"%d",getpid());
-                    strcat(tmp_pid,"fifo_game_toS");
-                    FIFO_game[1] = open(tmp_pid, O_WRONLY);
-                    write(FIFO_game[1],risposta, sizeof(risposta));
+                    printMessage(_domanda,"confirm");
+                    pthread_create(&THREAD_LETTURA,NULL,(void*)&QuestANDAnsw,_domanda);
+                    
+                    
                 }
                 else
                 {
                     //HO DATO LA RISPOSTA SBAGLIATA!
                     if(strcmp(BUFFER,"NO")==0){
                         printMessage("Risposta sbagliata","error"); 
-                        char * risposta = QuestANDAnsw(_domanda);
-                        write(FIFO_game[1],risposta, sizeof(risposta));
+                        pthread_create(&THREAD_LETTURA,NULL,(void*)&QuestANDAnsw,_domanda);
                     }
-                    //HO DATO LA RISPOSTA GIUSTA!
-                    /*else if(strcmp(BUFFER,"SI")==0)
-                    {
-                        printMessage("Risposta corretta e veloce! Complimenti!","confirm"); 
-                    }*/
                     else
                     {
                         printMessage(BUFFER,"warning");
                     }
                     
                 }
-                strcpy(BUFFER,"");
+                strcpy(BUFFER,"\0");
             }
     }    
 }
 
 //mostra in output la domanda e attende la risposta dell'utente
 
-char* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
-    printMessage(domanda,"confirm");
-    char *risposta = (char*)malloc(3*sizeof(char));
-    scanf("%s",risposta);
-    //printf("%s",risposta);
-    return risposta;
+void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
+    char *risposta = (char*)malloc(4*sizeof(char));
+    char *tmp = (char*) malloc(20*sizeof(char));
+    fgets(risposta,sizeof(risposta),stdin);
+    strcat(risposta,"\0");
+    sprintf(tmp,"%d",getpid());
+    strcat(tmp,"fifo_game_toS");
+    printf("RISPOSTA:%s\n",risposta);
+    FIFO_game[1] = open(tmp, O_WRONLY);
+    write(FIFO_game[1],risposta, sizeof(risposta));
+    free(risposta);
+    free(tmp);
 }
+
+
+

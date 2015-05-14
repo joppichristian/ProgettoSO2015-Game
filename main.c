@@ -75,7 +75,6 @@ int main(int argc,char** argv)
 
 int startServer(char * n_max,char * max,char * n_win,char * win)   
 {
-    printf("%s,%s,%s,%s\n",n_max,max,n_win,win);
     int massimo=10;
     int win_ptg = 10;
     if((strcmp(n_max,"--max"))==0)

@@ -13,7 +13,7 @@
 int init(int massimo,int ptg_vittoria){
     lock = 0;
     strcpy(domanda,"");
-    strcpy(risposta,"");
+    risposta = 0;
     if(massimo < 1 || massimo > 10)
         return -1;
     MAX = massimo;
@@ -30,7 +30,8 @@ int init(int massimo,int ptg_vittoria){
             exit(1);
         }
         //ERRNO != EEXIST
-        printMessage("FIFO player already exists.\n", "error");
+        printMessage("Server already exists.\n", "error");
+        exit(1);
     }
     else
     {
@@ -74,7 +75,7 @@ void *listenPlayer(){
                 pthread_mutex_lock(&PLAYER_MUTEX);
                 
                 strcpy(players[ACTIVE_PLAYER].pid,tmp);
-                players[ACTIVE_PLAYER].punteggio = 0;
+                players[ACTIVE_PLAYER].punteggio = MAX-ACTIVE_PLAYER;
                 
                 //Creo la FIFO per la risposta al server
                 strcat(tmp,"fifo_game_toS");
@@ -82,13 +83,12 @@ void *listenPlayer(){
                 if((players[ACTIVE_PLAYER].FIFO_game[0] = open(tmp,O_RDONLY | O_NONBLOCK))<0)
                     perror("FIFO_toS");
                 //
-                printf("ho creato la FIFO in lett . %s\n",tmp); 
+                
                 strcpy(tmp,players[ACTIVE_PLAYER].pid);
-                 printf("BUFFER: %s\n",tmp);
+                
                 //Creo la FIFO per l'invio della domanda al client
                 strcat(tmp,"fifo_game_toC");
                 mkfifo(tmp,FILE_MODE);
-                printf("ho creato la FIFO in scrit . %s\n",tmp); 
                 players[ACTIVE_PLAYER].FIFO_game[1] = open(tmp,O_WRONLY);
                 //
                 
@@ -121,16 +121,21 @@ void *listenPlayer(){
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
     printMessage(domanda,"warning");
+    
     char _risposta [30];
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     //CICLO
     while(1){
         //ASPETTA RISPOSTA
-        read(players[giocatore].FIFO_game[0],_risposta,255);
+        while((read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta)))==0);
+        
         if(strlen(_risposta)!=0){
+            
+            printMessage(_risposta,"error");
+            int tmp =atoi(_risposta);
             //CONTROLLA RISPOSTA
             //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E RICOMiNCIO
-            if(strcmp(_risposta,risposta) ==0 && lock != 1)
+            if(tmp == risposta && lock != 1)
             {
                 //Segnalo che un client ha risposto giusto!
                 lock = 1;
@@ -139,29 +144,30 @@ void *gestioneASKandANS(int giocatore){
                 makeAsk();
                 //Invio la nuova domanda a tutti gli altri client!
                 for(int i=0;i<ACTIVE_PLAYER;i++)
-                     write(players[i].FIFO_game[1],domanda,sizeof(domanda));
+                write(players[i].FIFO_game[1],domanda,sizeof(domanda));
+                printf("PID: %s PUNT: %d\n",players[giocatore].pid,players[giocatore].punteggio);
             }
             else
             {
+                players[giocatore].punteggio-=1;
                 write(players[giocatore].FIFO_game[1],"NO\0",3);
                 printf("Il giocatore %s ha risposto sbagliato \n",players[giocatore].pid);
             }
             lock=0;
         }
+      
         strcpy(_risposta,"");
     }
     
-
-    
-    //FINE CICLO
 }
 
 void makeAsk(){
-    int int_a = getRandom();
-    int int_b = getRandom();
-    sprintf(risposta,"%d",int_a + int_b);
-    char a [3]; 
-    char b [3];
+    srand(time(0));
+    int int_a = rand() % 100;
+    int int_b = rand() % 100;
+    risposta = int_a + int_b;
+    char a [4]; 
+    char b [4];
     sprintf(a,"%d",int_a);
     strcpy(domanda,a);
     strcat(domanda,"+");

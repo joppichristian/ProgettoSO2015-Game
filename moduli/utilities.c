@@ -46,9 +46,3 @@ void printMessage(char messages [], char type[]){
     
     free(tmp);
 }
-
-int getRandom(){
-    srand(time(NULL));
-    int r = rand() % 100;
-    return r;
-}

@@ -24,7 +24,7 @@ int init_client();
 
 void *ascoltaServer();
 
-char* QuestANDAnsw(char * domanda);
+void* QuestANDAnsw(char * domanda);
 
 //-----------------------------------------------------------------------------
 #endif

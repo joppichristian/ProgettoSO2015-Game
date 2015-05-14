@@ -38,10 +38,10 @@ pthread_t THREAD_CONN;
 pthread_mutex_t PLAYER_MUTEX;
 
 //ULTIMA DOMANDA INVIATA
-char domanda [6];
+char domanda [10];
 
 //ULTIMA RISPOSTA CALCOLATA
-char risposta[4];
+int risposta;
 
 //SEMAFORO CHE BLOCCA LE RISPOSTE GIUSTE NEL CASO NE SIA GIA STATA DATA UNA CORRETTA
 int lock;
