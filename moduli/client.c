@@ -55,7 +55,7 @@ void *ascoltaServer(){
     while(1){
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
             if (strlen(BUFFER) != 0){
-                pthread_destroy(THREAD_LETTURA);
+                pthread_kill(&THREAD_LETTURA,SIGSTOP);
                 //CONTROLLO CHE IL MESSAGGIO NON SIA UNA COMUNICAZIONE DEL SERVER MA UNA DOMANDA!
                 if(((int)BUFFER[0]) > 47 && (((int)BUFFER[0]) < 58)) {
                     
@@ -85,7 +85,6 @@ void *ascoltaServer(){
 
 //mostra in output la domanda e attende la risposta dell'utente
 
-<<<<<<< Updated upstream
 void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     char *risposta = (char*)malloc(4*sizeof(char));
     char *tmp = (char*) malloc(20*sizeof(char));
@@ -98,14 +97,6 @@ void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     write(FIFO_game[1],risposta, sizeof(risposta));
     free(risposta);
     free(tmp);
-=======
-char* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
-    printMessage(domanda,"confirm");
-    char *risposta = (char*)malloc(3*sizeof(char));
-    scanf("%s",risposta);
-    printf("%s",risposta);
-    return risposta;
->>>>>>> Stashed changes
 }
 
 
