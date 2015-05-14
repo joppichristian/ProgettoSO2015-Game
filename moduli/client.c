@@ -85,6 +85,7 @@ void *ascoltaServer(){
 
 //mostra in output la domanda e attende la risposta dell'utente
 
+<<<<<<< Updated upstream
 void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     char *risposta = (char*)malloc(4*sizeof(char));
     char *tmp = (char*) malloc(20*sizeof(char));
@@ -97,6 +98,14 @@ void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     write(FIFO_game[1],risposta, sizeof(risposta));
     free(risposta);
     free(tmp);
+=======
+char* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
+    printMessage(domanda,"confirm");
+    char *risposta = (char*)malloc(3*sizeof(char));
+    scanf("%s",risposta);
+    printf("%s",risposta);
+    return risposta;
+>>>>>>> Stashed changes
 }
 
 
