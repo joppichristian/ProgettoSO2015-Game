@@ -31,11 +31,10 @@ void init_client(){
     while(read(FIFO_player_CL[1], BUFFER, 255)==0);
     //CONTROLLO SE IL SERVER é PRONTO PER ACCOGLIERE ALTRE CONNESSIONI.
     if (strcmp(BUFFER,"NO")==0){
-        printMessage("SERVER IS FULL.", "warning");
+        printMessage("SERVER IS FULL", "warning");
         unlink(tmp_pid);
         exit(1);
     } 
-    printMessage("Connected!", "log");
     unlink(tmp_pid);
     pthread_create(&THascolto,NULL,(void*)&ascoltaServer,NULL);
     pthread_join(THascolto, NULL);
@@ -71,8 +70,7 @@ void *ascoltaServer(){
                 else if((int)BUFFER[0] == 60)                           //Controllo se il messaggio in arrivo inizia col carattere < 
                 {                                                       //cioè sto leggendo la classifica finale
                     printMessage("Classifica:","confirm");
-                    printf("%s\n",BUFFER);
-                    //printMessage(BUFFER,"confirm");
+                    printMessage(BUFFER,"confirm");
                     unlink(pathFIFOtoC);
                     unlink(pathFIFOtoS);
                     pthread_exit(NULL);

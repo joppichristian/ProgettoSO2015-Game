@@ -44,7 +44,6 @@ int main(int argc,char** argv)
         {
             startServer("","","","");
         }
-        printf("Il server è stato creato\n");
     }
     else if((strcmp(argv[1],"client"))==0){
         init_client();

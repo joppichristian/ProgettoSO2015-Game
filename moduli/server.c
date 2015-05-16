@@ -65,8 +65,6 @@ void *listenPlayer(){
                 }
             if(ACTIVE_PLAYER < MAX)
             {
-
-                printf("HO LETTO E CREATO LA FIFO %s GIOCATORI ISCRITTI: %i \n",BUFFER,ACTIVE_PLAYER+1);
                 write(FIFO_player_ANSW,"OK\0",3);
 
                 //MUTEX LOCK
@@ -119,11 +117,10 @@ void *listenPlayer(){
 
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
-    printMessage(domanda,"warning");
-    
     char _risposta [30];
-    
+    pthread_mutex_lock(&PLAYER_MUTEX);
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
+    pthread_mutex_unlock(&PLAYER_MUTEX);
     //CICLO
     while(players[giocatore].punteggio < WIN){
         //ASPETTA RISPOSTA
@@ -138,21 +135,25 @@ void *gestioneASKandANS(int giocatore){
             if(tmp == risposta && lock != 1)
             {
                 //Segnalo che un client ha risposto giusto!
+                pthread_mutex_lock(&PLAYER_MUTEX);
                 lock = 1;
                 printf("Il giocatore %s ha risposto giusto \n",players[giocatore].pid);
                 players[giocatore].punteggio +=1;
                 if(players[giocatore].punteggio < WIN){
                     makeAsk();
+                    
                     //Invio la nuova domanda a tutti gli altri client!
                     for(int i=0;i<ACTIVE_PLAYER;i++)
                         write(players[i].FIFO_game[1],domanda,sizeof(domanda));
-                    printf("PID: %s PUNT: %d\n",players[giocatore].pid,players[giocatore].punteggio);
+                    pthread_mutex_unlock(&PLAYER_MUTEX);
                 }
             }
             else
             {
+                pthread_mutex_lock(&PLAYER_MUTEX);
                 players[giocatore].punteggio-=1;
                 write(players[giocatore].FIFO_game[1],"NO\0",3);
+                pthread_mutex_unlock(&PLAYER_MUTEX);
                 printf("Il giocatore %s ha risposto sbagliato \n",players[giocatore].pid);
             }
             lock=0;
@@ -169,7 +170,6 @@ void *gestioneASKandANS(int giocatore){
     pthread_mutex_unlock(&PLAYER_MUTEX);
     free(classifica);
     fine = 1;
-    printMessage("Il gioco è terminato","warning");
     pthread_exit(NULL);
 }
 
@@ -201,7 +201,7 @@ char* makeClassifica()
         strcat(classifica,tmp);
         strcat(classifica,"\n  ");
     }
-    strcat(classifica,"\0");
+    strcat(classifica,"\n\0");
     pthread_mutex_unlock(&PLAYER_MUTEX);
     return classifica;
 }
