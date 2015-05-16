@@ -1,10 +1,7 @@
-#include <stdio.h>
-#include <unistd.h>
+
 #include "server.h"
 #include "utilities.h"
-#include <sys/errno.h>
-#include <stdlib.h>
-#include <string.h>
+
 
 
 //-------------------- DEFINIZIONE FUNZIONI ------------------------
@@ -12,6 +9,7 @@
 //inizializza il server impostando il numero massimo di giocatori e il punteggio di vittoria
 void init(int massimo,int ptg_vittoria){
     lock = 0;
+    fine = 0;
     strcpy(domanda,"");
     risposta = 0;
     if(massimo < 1 || massimo > 10)
@@ -20,6 +18,12 @@ void init(int massimo,int ptg_vittoria){
     if(ptg_vittoria < 10 || ptg_vittoria > 100)
         printMessage("valore WIN non consentito MAX:50","error"); 
     WIN = ptg_vittoria;
+   
+    if(signal(SIGINT, signal_handler) ==SIG_ERR)                        //Gestisco le Interrupt <CNTR-C> richiamando il signal_handler 
+    {
+        printMessage("SERVER ERROR","error");
+        exit(-1);
+    }
     
     //Creo la FIFO che comunica daClientVersoServer per l'inserimento dei giocatori in partita se non è già stata creata ( server già esistente ) 
     if(mkfifo("fifo_player",FILE_MODE))
@@ -41,6 +45,21 @@ void init(int massimo,int ptg_vittoria){
         pthread_join(THREAD_CONN, NULL);
         
     }
+    
+     
+    
+    char tmp[255];                                                       //Preparo la stringa da stampare all'apertura del server
+    char tmp2[50];                                                      //che contiene il numero max di giocatori ammessi e il 
+    strcpy(tmp,"Il server viene avviato, si accetta un massimo di ");     //punteggio di vittoria.
+    sprintf(tmp2,"%d",MAX);
+    strcat(tmp,tmp2);
+    strcat(tmp,"giocatori e si vince con un punteggio di ");
+    sprintf(tmp2,"%d",WIN);
+    strcat(tmp,tmp2);
+    printMessage(tmp,"log");                                            //Stampo la stringa appena creata
+    
+    
+    
     unlink("fifo_player");
 }
 
@@ -206,6 +225,16 @@ char* makeClassifica()
     return classifica;
 }
 
-
+static void signal_handler(){
+    printMessage("\nIL SERVER VIENE CHIUSO","warning");
+    unlink("fifo_player");
+    pthread_mutex_lock(&PLAYER_MUTEX);
+    for(int i=0;i<ACTIVE_PLAYER;i++)
+        write(players[i].FIFO_game[1],"STOP\0",5);
+    fine=1;
+    pthread_mutex_unlock(&PLAYER_MUTEX);
+    
+    exit(-1);
+}
 //-----------------------------------------------------------------------
 

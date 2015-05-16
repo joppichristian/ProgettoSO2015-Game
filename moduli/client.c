@@ -1,10 +1,7 @@
-#include <stdio.h>
-#include <unistd.h>
+
 #include "client.h"
 #include "utilities.h"
-#include <sys/errno.h>
-#include <string.h>
-#include <stdlib.h>
+
 
 
 //funzione init che verifica l'esistenza di un server e in caso esista scrive nella FIFO il relativo pid e aspetta la risposta del server
@@ -19,6 +16,14 @@ void init_client(){
         exit(1);
         
     }
+    
+    if(signal(SIGINT, signal_handler) == SIG_ERR)                        //Gestisco le Interrupt <CNTR-C> richiamando il signal_handler 
+    {
+        printMessage("SERVER ERROR","error");
+        exit(-1);
+    }
+    
+    
     char pid [20];
     char tmp_pid [20];
     sprintf(tmp_pid,"%d",getpid());
@@ -75,6 +80,13 @@ void *ascoltaServer(){
                     unlink(pathFIFOtoS);
                     pthread_exit(NULL);
                 }
+                else if((int)BUFFER[0] == 83)                           //Controllo se il messaggio in arrivo inizia col carattere S
+                {                                                       //cioè sto leggendo che il server è stato chiuso (STOP)
+                    printMessage("Il Server è stato interrotto","warning");
+                    unlink(pathFIFOtoC);
+                    unlink(pathFIFOtoS);
+                    pthread_exit(NULL);
+                }
                 else
                 {
                     //HO DATO LA RISPOSTA SBAGLIATA!
@@ -108,6 +120,14 @@ void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     write(FIFO_game[1],risposta, sizeof(risposta));
     free(risposta);
     free(tmp);
+}
+
+
+static void signal_handler(){
+    printMessage("\nIl CLIENT DI GIOCO VIENE CHIUSO","warning");
+    unlink(pathFIFOtoC);
+    unlink(pathFIFOtoS);
+    exit(-1);
 }
 
 

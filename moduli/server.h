@@ -3,6 +3,12 @@
 
 #include <fcntl.h>
 #include <pthread.h>
+#include <sys/errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
 //-----------------DEFINIZIONI VARIABILI E STRUTTURE --------------------------
 
 //STRUTTURA CHE DEFINISCE UN PLAYER CON PID, PUNTEGGIO e RELATIVE FIFO
@@ -63,6 +69,8 @@ void *gestioneASKandANS();
 void makeAsk();
 
 char* makeClassifica();
+
+static void signal_handler();
 //----------------------------------------------------------------------------
 
 

@@ -3,6 +3,12 @@
 
 #include <fcntl.h>
 #include <pthread.h>
+#include <sys/errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
 //-----------------DEFINIZIONI VARIABILI E STRUTTURE --------------------------
 //FIFO giocatori
 int FIFO_player_CL[2];
@@ -31,6 +37,8 @@ void init_client();
 void *ascoltaServer();
 
 void* QuestANDAnsw(char * domanda);
+
+static void signal_handler();
 
 //-----------------------------------------------------------------------------
 #endif
