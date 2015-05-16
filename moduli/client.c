@@ -8,9 +8,11 @@
 
 
 //funzione init che verifica l'esistenza di un server e in caso esista scrive nella FIFO il relativo pid e aspetta la risposta del server
-int init_client(){
+void init_client(){
     
     char BUFFER[255];
+    strcpy(pathFIFOtoC,"");
+    strcpy(pathFIFOtoS,"");
     if((FIFO_player_CL[0] = open("fifo_player",O_WRONLY | O_NONBLOCK))<0)
     {
         printMessage("Server does not exist.", "error"); //non c'è server
@@ -44,12 +46,13 @@ int init_client(){
 //FIFO_game[0] è la fifo da server verso client, FIFO_game[1] è la fifo da client verso server
 void *ascoltaServer(){
     pthread_t THREAD_LETTURA;
-    char BUFFER[255];
+    char BUFFER[1000];
     char _domanda[10];
     char tmp_pid [20];
     char risposta[10];
     sprintf(tmp_pid,"%d",getpid());
     strcat(tmp_pid,"fifo_game_toC");
+    strcpy(pathFIFOtoC,tmp_pid);
     printMessage("Sto ascoltanto le domande dal server","warning");
     FIFO_game[0] = open(tmp_pid, O_RDONLY );
     while(1){
@@ -64,6 +67,15 @@ void *ascoltaServer(){
                     pthread_create(&THREAD_LETTURA,NULL,(void*)&QuestANDAnsw,_domanda);
                     
                     
+                }
+                else if((int)BUFFER[0] == 60)                           //Controllo se il messaggio in arrivo inizia col carattere < 
+                {                                                       //cioè sto leggendo la classifica finale
+                    printMessage("Classifica:","confirm");
+                    printf("%s\n",BUFFER);
+                    //printMessage(BUFFER,"confirm");
+                    unlink(pathFIFOtoC);
+                    unlink(pathFIFOtoS);
+                    pthread_exit(NULL);
                 }
                 else
                 {
@@ -92,7 +104,8 @@ void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     strcat(risposta,"\0");
     sprintf(tmp,"%d",getpid());
     strcat(tmp,"fifo_game_toS");
-    printf("RISPOSTA:%s\n",risposta);
+    if(strlen(pathFIFOtoS)==0)
+        strcpy(pathFIFOtoS,tmp); 
     FIFO_game[1] = open(tmp, O_WRONLY);
     write(FIFO_game[1],risposta, sizeof(risposta));
     free(risposta);

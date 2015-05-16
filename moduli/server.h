@@ -46,12 +46,15 @@ int risposta;
 //SEMAFORO CHE BLOCCA LE RISPOSTE GIUSTE NEL CASO NE SIA GIA STATA DATA UNA CORRETTA
 int lock;
 
+//1 QUANDO IL GIOCO TERMINA --> IMPONE AL THREAD DI ASCOLTO GIOCATORI DI TERMINARE
+int fine;
+
 
 //------------------------------------------------------------------------------
 
 //-----------------DEFINIZIONE FIRME FUNZIONI server.c-------------------------
 
-int init(int massimo,int ptg_vittoria);
+void init(int massimo,int ptg_vittoria);
 
 void *listenPlayer();
 
@@ -59,6 +62,7 @@ void *gestioneASKandANS();
 
 void makeAsk();
 
+char* makeClassifica();
 //----------------------------------------------------------------------------
 
 
