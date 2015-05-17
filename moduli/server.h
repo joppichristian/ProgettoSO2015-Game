@@ -81,6 +81,10 @@ void makeAsk();
 
 char* makeClassifica();
 
+void swap();
+
+void orderClassifica();
+
 static void signal_handler();
 //----------------------------------------------------------------------------
 

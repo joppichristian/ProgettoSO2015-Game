@@ -245,6 +245,7 @@ char* makeClassifica()
     char tmp [4];
     strcpy(classifica,"<PLAYER>\t<PUNTEGGIO>\n  ");
     pthread_mutex_lock(&PLAYER_MUTEX);
+    orderClassifica();
     //concatena pid e punteggio raggiunto dal giocatore
     for(int i=0;i<ACTIVE_PLAYER;i++)
     {
@@ -273,5 +274,28 @@ static void signal_handler(){
     }
     exit(-1);
 }
+
+//funzione che scambia i valori
+void swap (int a, int b){
+    struct PLAYER tmp;
+    tmp = players[a];
+    players[a]=players[b];
+    players[b]=tmp;
+}
+
+//funzione che ordina la classifica in modo descrescente
+void orderClassifica(){
+    
+    for (int i=0;i<ACTIVE_PLAYER;i++){
+        for (int j=i; j<ACTIVE_PLAYER; j++){
+            if (players[i].punteggio < players[j].punteggio){
+                swap (i,j);
+            }
+        }
+    }
+}
+
+
+
 //-----------------------------------------------------------------------
 
