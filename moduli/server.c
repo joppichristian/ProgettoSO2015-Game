@@ -142,7 +142,6 @@ void *listenPlayer(){
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
     char _risposta [30];
-    players[giocatore].ritirato = 0;
     pthread_mutex_lock(&PLAYER_MUTEX);
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     pthread_mutex_unlock(&PLAYER_MUTEX);
@@ -159,13 +158,12 @@ void *gestioneASKandANS(int giocatore){
                 unlink(pathFIFO_ToS[giocatore]);
                 unlink(pathFIFO_ToC[giocatore]);
                 players[giocatore].ritirato = 1;
-                printMessage("Giocatore perso","error");
                 pthread_exit(NULL);
                 
             }
             else
             {
-                
+                players[giocatore].ritirato = 0;
                 printMessage(_risposta,"error");
                 int tmp =atoi(_risposta);
                 //CONTROLLA RISPOSTA
@@ -213,7 +211,7 @@ void *gestioneASKandANS(int giocatore){
     //scrivo la classifica da mandare
     for(int i=0;i<ACTIVE_PLAYER;i++)
         if(players[i].ritirato != 1)
-            write(players[i].FIFO_game[1],classifica,sizeof(classifica));
+            write(players[i].FIFO_game[1],classifica,255*ACTIVE_PLAYER);
     pthread_mutex_unlock(&PLAYER_MUTEX);
     free(classifica);
     fine = 1;

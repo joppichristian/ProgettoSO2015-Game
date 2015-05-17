@@ -30,7 +30,6 @@ void init_client(){
     sprintf(tmp_pid,"%d",getpid());
     sprintf(pid,"%d",getpid());
     strcat(tmp_pid,"fifo_player");
-    printf("%s\n",pid);
     mkfifo(tmp_pid,FILE_MODE);
     write(FIFO_player_CL[0],pid, sizeof(pid));
     FIFO_player_CL[1] = open(tmp_pid,O_RDONLY);
