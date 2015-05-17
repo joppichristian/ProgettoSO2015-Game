@@ -142,6 +142,7 @@ void *listenPlayer(){
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
     char _risposta [30];
+    players[giocatore].ritirato = 0;
     pthread_mutex_lock(&PLAYER_MUTEX);
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     pthread_mutex_unlock(&PLAYER_MUTEX);
@@ -161,10 +162,10 @@ void *gestioneASKandANS(int giocatore){
                 pthread_exit(NULL);
                 
             }
-            else
+            else if( (int)_risposta[0] > 47 && (int)_risposta[0] < 58)
             {
-                players[giocatore].ritirato = 0;
-                printMessage(_risposta,"error");
+                
+                printMessage(_risposta,"confirm");
                 int tmp =atoi(_risposta);
                 //CONTROLLA RISPOSTA
                 //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E INVIO NUOVA DOMANDA
@@ -206,7 +207,6 @@ void *gestioneASKandANS(int giocatore){
     //quando viene raggiunto il punteggio di vittoria stampo la classifica
     char *classifica = (char*)malloc((sizeof(char)*20)*(ACTIVE_PLAYER+2));
     classifica = makeClassifica();
-    printf("Classifica: \n%s",classifica);
     pthread_mutex_lock(&PLAYER_MUTEX);
     //scrivo la classifica da mandare
     for(int i=0;i<ACTIVE_PLAYER;i++)
