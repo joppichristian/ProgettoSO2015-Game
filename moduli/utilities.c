@@ -12,7 +12,9 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-
+/*
+funzione che prende in input un messaggio e il tipo di errore da stampare, in base al tipo di errore stampa il messaggio in un determinato colore (error:red, warning:yellow, confirm: green, log: magenta)
+*/
 void printMessage(char messages [], char type[]){ 
     char * tmp;
         if (strcmp(type,"error")==0){

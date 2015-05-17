@@ -1,31 +1,35 @@
-
 #include "server.h"
 #include "utilities.h"
-
 
 
 //-------------------- DEFINIZIONE FUNZIONI ------------------------
 
 //inizializza il server impostando il numero massimo di giocatori e il punteggio di vittoria
 void init(int massimo,int ptg_vittoria){
-    lock = 0;
-    fine = 0;
+    lock = 0; //semaforo per modifica di variabili condivise
+    fine = 0; //semaforo per modifica di variabili condivise
     strcpy(domanda,"");
     risposta = 0;
+    
+        //controlla che il numero di giocatori sia al massimo 10
     if(massimo < 1 || massimo > 10)
-        printMessage("valore MAX non consentito MAX:10","error"); 
+        printMessage("valore MAX non consentito MIN:1 MAX:10","error"); 
     MAX = massimo;
+    
+        //controlla che il punteggio sia min 10 e max 100
     if(ptg_vittoria < 10 || ptg_vittoria > 100)
-        printMessage("valore WIN non consentito MAX:50","error"); 
+        printMessage("valore WIN non consentito MIN:10 MAX:100","error"); 
     WIN = ptg_vittoria;
    
-    if(signal(SIGINT, signal_handler) ==SIG_ERR)                        //Gestisco le Interrupt <CNTR-C> richiamando il signal_handler 
+    
+    if(signal(SIGINT, signal_handler) ==SIG_ERR)                        
+        //Gestisco le Interrupt <CTRL-C> richiamando il signal_handler 
     {
         printMessage("SERVER ERROR","error");
         exit(-1);
     }
     
-    //Creo la FIFO che comunica daClientVersoServer per l'inserimento dei giocatori in partita se non è già stata creata ( server già esistente ) 
+    //Creo la FIFO che comunica daClientVersoServer per l'inserimento dei giocatori in partita se non è già stata creata ( server già esistente ), in quel caso stama un messaggio di errore
     if(mkfifo("fifo_player",FILE_MODE))
     {
         if(errno!= EEXIST)
@@ -48,17 +52,15 @@ void init(int massimo,int ptg_vittoria){
     
      
     
-    char tmp[255];                                                       //Preparo la stringa da stampare all'apertura del server
-    char tmp2[50];                                                      //che contiene il numero max di giocatori ammessi e il 
+    char tmp[255];   //Preparo la stringa da stampare all'apertura del server
+    char tmp2[50];   //che contiene il numero max di giocatori ammessi e il 
     strcpy(tmp,"Il server viene avviato, si accetta un massimo di ");     //punteggio di vittoria.
     sprintf(tmp2,"%d",MAX);
     strcat(tmp,tmp2);
     strcat(tmp,"giocatori e si vince con un punteggio di ");
     sprintf(tmp2,"%d",WIN);
     strcat(tmp,tmp2);
-    printMessage(tmp,"log");                                            //Stampo la stringa appena creata
-    
-    
+    printMessage(tmp,"log");    //Stampo la stringa appena creata
     
     unlink("fifo_player");
 }
@@ -133,6 +135,7 @@ void *listenPlayer(){
 
 }
 
+//funzione che gestisce domande e risposte
 
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
@@ -150,14 +153,17 @@ void *gestioneASKandANS(int giocatore){
             printMessage(_risposta,"error");
             int tmp =atoi(_risposta);
             //CONTROLLA RISPOSTA
-            //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E RICOMiNCIO
+            //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E INVIO NUOVA DOMANDA
             if(tmp == risposta && lock != 1)
             {
                 //Segnalo che un client ha risposto giusto!
                 pthread_mutex_lock(&PLAYER_MUTEX);
                 lock = 1;
+                //comunico che la risposta è corretta
                 printf("Il giocatore %s ha risposto giusto \n",players[giocatore].pid);
+                //aumento punteggio
                 players[giocatore].punteggio +=1;
+                //controllo che il punteggio sia minore rispetto a WIN (punteggio di vittoria)
                 if(players[giocatore].punteggio < WIN){
                     makeAsk();
                     
@@ -167,12 +173,12 @@ void *gestioneASKandANS(int giocatore){
                     pthread_mutex_unlock(&PLAYER_MUTEX);
                 }
             }
-            else
+            else  //se la risposta è sbagliata
             {
-                pthread_mutex_lock(&PLAYER_MUTEX);
-                players[giocatore].punteggio-=1;
-                write(players[giocatore].FIFO_game[1],"NO\0",3);
-                pthread_mutex_unlock(&PLAYER_MUTEX);
+                pthread_mutex_lock(&PLAYER_MUTEX); //blocco l'accesso alle variabili che modifico tra lock e unlock
+                players[giocatore].punteggio-=1; //diminuisco il punteggio
+                write(players[giocatore].FIFO_game[1],"NO\0",3); //segnalo risposta sbagliata
+                pthread_mutex_unlock(&PLAYER_MUTEX); //sblocco l'accesso alle variabili che modifico tra lock e unlock
                 printf("Il giocatore %s ha risposto sbagliato \n",players[giocatore].pid);
             }
             lock=0;
@@ -180,10 +186,13 @@ void *gestioneASKandANS(int giocatore){
         
         strcpy(_risposta,"");
     }
+    
+    //quando viene raggiunto il punteggio di vittoria stampo la classifica
     char *classifica = (char*)malloc((sizeof(char)*20)*(ACTIVE_PLAYER+2));
     classifica = makeClassifica();
     printf("Classifica: \n%s",classifica);
     pthread_mutex_lock(&PLAYER_MUTEX);
+    //scrivo la classifica da mandare
     for(int i=0;i<ACTIVE_PLAYER;i++)
         write(players[i].FIFO_game[1],classifica,sizeof(classifica));
     pthread_mutex_unlock(&PLAYER_MUTEX);
@@ -192,6 +201,7 @@ void *gestioneASKandANS(int giocatore){
     pthread_exit(NULL);
 }
 
+//funzione che crea la domanda unendo in una stringa due interi random
 void makeAsk(){
     srand(time(0));
     int int_a = rand() % 100;
@@ -206,12 +216,14 @@ void makeAsk(){
     strcat(domanda,b);
 }
 
+//funzione che crea la classifica da stampare al termine della partita
 char* makeClassifica()
 {
     char *classifica = (char*)malloc((sizeof(char)*20)*(ACTIVE_PLAYER+2));
     char tmp [4];
     strcpy(classifica,"<PLAYER>\t<PUNTEGGIO>\n  ");
     pthread_mutex_lock(&PLAYER_MUTEX);
+    //concatena pid e punteggio raggiunto dal giocatore
     for(int i=0;i<ACTIVE_PLAYER;i++)
     {
         strcat(classifica,players[i].pid);

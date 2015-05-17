@@ -1,23 +1,26 @@
-
 #include "client.h"
 #include "utilities.h"
 
 
+/*
+funzione init_client che verifica l'esistenza di un server e nel caso in cui esista scrive nella FIFO il relativo pid e aspetta la risposta del server altrimenti restituisce un messaggio d'errore
+*/
 
-//funzione init che verifica l'esistenza di un server e in caso esista scrive nella FIFO il relativo pid e aspetta la risposta del server
 void init_client(){
     
     char BUFFER[255];
     strcpy(pathFIFOtoC,"");
     strcpy(pathFIFOtoS,"");
     if((FIFO_player_CL[0] = open("fifo_player",O_WRONLY | O_NONBLOCK))<0)
+        //verifica che esista fifo_player provando ad aprirla, in quel caso allora esiste già il server che l'ha creata
     {
         printMessage("Server does not exist.", "error"); //non c'è server
         exit(1);
         
     }
     
-    if(signal(SIGINT, signal_handler) == SIG_ERR)                        //Gestisco le Interrupt <CNTR-C> richiamando il signal_handler 
+    if(signal(SIGINT, signal_handler) == SIG_ERR)                        
+        //Gestisco le Interrupt <CTRL-C> richiamando il signal_handler 
     {
         printMessage("SERVER ERROR","error");
         exit(-1);
@@ -34,13 +37,14 @@ void init_client(){
     write(FIFO_player_CL[0],pid, sizeof(pid));
     FIFO_player_CL[1] = open(tmp_pid,O_RDONLY);
     while(read(FIFO_player_CL[1], BUFFER, 255)==0);
-    //CONTROLLO SE IL SERVER é PRONTO PER ACCOGLIERE ALTRE CONNESSIONI.
+    //CONTROLLO SE IL SERVER é PRONTO PER ACCOGLIERE ALTRE CONNESSIONI. Se nel buffer trova la stringa "NO" vuol dire che il numero massimo di giocatori è stato raggiunto e quindi stampa un messaggio d'errore
     if (strcmp(BUFFER,"NO")==0){
         printMessage("SERVER IS FULL", "warning");
         unlink(tmp_pid);
         exit(1);
     } 
     unlink(tmp_pid);
+    //altrimenti crea un thread e rimane in ascolto
     pthread_create(&THascolto,NULL,(void*)&ascoltaServer,NULL);
     pthread_join(THascolto, NULL);
     
@@ -72,16 +76,20 @@ void *ascoltaServer(){
                     
                     
                 }
-                else if((int)BUFFER[0] == 60)                           //Controllo se il messaggio in arrivo inizia col carattere < 
-                {                                                       //cioè sto leggendo la classifica finale
+                else if((int)BUFFER[0] == 60)                           
+                    //Controllo se il messaggio in arrivo inizia col carattere < 
+                {                                                       
+                    //cioè sto leggendo la classifica finale
                     printMessage("Classifica:","confirm");
                     printMessage(BUFFER,"confirm");
                     unlink(pathFIFOtoC);
                     unlink(pathFIFOtoS);
                     pthread_exit(NULL);
                 }
-                else if((int)BUFFER[0] == 83)                           //Controllo se il messaggio in arrivo inizia col carattere S
-                {                                                       //cioè sto leggendo che il server è stato chiuso (STOP)
+                else if((int)BUFFER[0] == 83)                           
+                    //Controllo se il messaggio in arrivo inizia col carattere S
+                {                                                       
+                    //cioè sto leggendo che il server è stato chiuso (STOP)
                     printMessage("Il Server è stato interrotto","warning");
                     unlink(pathFIFOtoC);
                     unlink(pathFIFOtoS);
@@ -105,9 +113,11 @@ void *ascoltaServer(){
     }    
 }
 
-//mostra in output la domanda e attende la risposta dell'utente
+/*
+funzione che prende in input la striga domanda, la mostra in output e attende la risposta dell'utente tramite fgets e la scrive in FIFO_game[1]
+*/
 
-void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
+void* QuestANDAnsw(char *domanda){
     char *risposta = (char*)malloc(4*sizeof(char));
     char *tmp = (char*) malloc(20*sizeof(char));
     fgets(risposta,sizeof(risposta),stdin);
@@ -122,7 +132,7 @@ void* QuestANDAnsw(char *domanda){  //prima di passare domanda mettere \n
     free(tmp);
 }
 
-
+//Se viene richiamata stampa il messaggio di warning e rimuove il client dalla lista giocatori
 static void signal_handler(){
     printMessage("\nIl CLIENT DI GIOCO VIENE CHIUSO","warning");
     unlink(pathFIFOtoC);
