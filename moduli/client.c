@@ -9,8 +9,6 @@ funzione init_client che verifica l'esistenza di un server e nel caso in cui esi
 void init_client(){
     
     char BUFFER[255];
-    strcpy(pathFIFOtoC,"");
-    strcpy(pathFIFOtoS,"");
     if((FIFO_player_CL[0] = open("fifo_player",O_WRONLY | O_NONBLOCK))<0)
         //verifica che esista fifo_player provando ad aprirla, in quel caso allora esiste già il server che l'ha creata
     {
@@ -60,7 +58,6 @@ void *ascoltaServer(){
     char risposta[10];
     sprintf(tmp_pid,"%d",getpid());
     strcat(tmp_pid,"fifo_game_toC");
-    strcpy(pathFIFOtoC,tmp_pid);
     printMessage("Sto ascoltanto le domande dal server","warning");
     FIFO_game[0] = open(tmp_pid, O_RDONLY );
     while(1){
@@ -82,8 +79,6 @@ void *ascoltaServer(){
                     //cioè sto leggendo la classifica finale
                     printMessage("Classifica:","confirm");
                     printMessage(BUFFER,"confirm");
-                    unlink(pathFIFOtoC);
-                    unlink(pathFIFOtoS);
                     pthread_exit(NULL);
                 }
                 else if((int)BUFFER[0] == 83)                           
@@ -91,8 +86,6 @@ void *ascoltaServer(){
                 {                                                       
                     //cioè sto leggendo che il server è stato chiuso (STOP)
                     printMessage("Il Server è stato interrotto","warning");
-                    unlink(pathFIFOtoC);
-                    unlink(pathFIFOtoS);
                     pthread_exit(NULL);
                 }
                 else
@@ -124,8 +117,6 @@ void* QuestANDAnsw(char *domanda){
     strcat(risposta,"\0");
     sprintf(tmp,"%d",getpid());
     strcat(tmp,"fifo_game_toS");
-    if(strlen(pathFIFOtoS)==0)
-        strcpy(pathFIFOtoS,tmp); 
     FIFO_game[1] = open(tmp, O_WRONLY);
     write(FIFO_game[1],risposta, sizeof(risposta));
     free(risposta);
@@ -135,8 +126,7 @@ void* QuestANDAnsw(char *domanda){
 //Se viene richiamata stampa il messaggio di warning e rimuove il client dalla lista giocatori
 static void signal_handler(){
     printMessage("\nIl CLIENT DI GIOCO VIENE CHIUSO","warning");
-    unlink(pathFIFOtoC);
-    unlink(pathFIFOtoS);
+    write(FIFO_game[1],"STOP\0",5);
     exit(-1);
 }
 

@@ -46,21 +46,22 @@ void init(int massimo,int ptg_vittoria){
         if((FIFO_player = open("fifo_player",O_RDONLY))<0)
             printMessage("Error opening FIFO", "error");
         pthread_create(&THREAD_CONN,NULL,(void*)&listenPlayer,NULL);
+        char tmp[255];   //Preparo la stringa da stampare all'apertura del server
+        char tmp2[50];   //che contiene il numero max di giocatori ammessi e il 
+        strcpy(tmp,"Il server viene avviato, si accetta un massimo di ");     //punteggio di vittoria.
+        sprintf(tmp2,"%d",MAX);
+        strcat(tmp,tmp2);
+        strcat(tmp,"giocatori e si vince con un punteggio di ");
+        sprintf(tmp2,"%d",WIN);
+        strcat(tmp,tmp2);
+        printMessage(tmp,"log");    //Stampo la stringa appena creata
         pthread_join(THREAD_CONN, NULL);
         
     }
     
      
     
-    char tmp[255];   //Preparo la stringa da stampare all'apertura del server
-    char tmp2[50];   //che contiene il numero max di giocatori ammessi e il 
-    strcpy(tmp,"Il server viene avviato, si accetta un massimo di ");     //punteggio di vittoria.
-    sprintf(tmp2,"%d",MAX);
-    strcat(tmp,tmp2);
-    strcat(tmp,"giocatori e si vince con un punteggio di ");
-    sprintf(tmp2,"%d",WIN);
-    strcat(tmp,tmp2);
-    printMessage(tmp,"log");    //Stampo la stringa appena creata
+    
     
     unlink("fifo_player");
 }
@@ -70,7 +71,6 @@ void *listenPlayer(){
     char BUFFER [255];
     char* tmp;
     int FIFO_player_ANSW;
-    pthread_t THREAD_GAME [MAX];
     while(fine==0){
         strcpy(BUFFER,"");
         read(FIFO_player,BUFFER,255);
@@ -93,10 +93,11 @@ void *listenPlayer(){
                 
                 strcpy(players[ACTIVE_PLAYER].pid,tmp);
                 players[ACTIVE_PLAYER].punteggio = MAX-ACTIVE_PLAYER;
-                
+                players[ACTIVE_PLAYER].ritirato = 1;
                 //Creo la FIFO per la risposta al server
                 strcat(tmp,"fifo_game_toS");
                 mkfifo(tmp,FILE_MODE);
+                strcpy(pathFIFO_ToS[ACTIVE_PLAYER],tmp);
                 if((players[ACTIVE_PLAYER].FIFO_game[0] = open(tmp,O_RDONLY | O_NONBLOCK))<0)
                     perror("FIFO_toS");
                 //
@@ -106,6 +107,7 @@ void *listenPlayer(){
                 //Creo la FIFO per l'invio della domanda al client
                 strcat(tmp,"fifo_game_toC");
                 mkfifo(tmp,FILE_MODE);
+                strcpy(pathFIFO_ToC[ACTIVE_PLAYER],tmp);
                 players[ACTIVE_PLAYER].FIFO_game[1] = open(tmp,O_WRONLY);
                 //
                 
@@ -140,6 +142,7 @@ void *listenPlayer(){
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
     char _risposta [30];
+    players[giocatore].ritirato = 0;
     pthread_mutex_lock(&PLAYER_MUTEX);
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     pthread_mutex_unlock(&PLAYER_MUTEX);
@@ -149,39 +152,54 @@ void *gestioneASKandANS(int giocatore){
         while(read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta))==0);
         
         if(strlen(_risposta)!=0){
-            
-            printMessage(_risposta,"error");
-            int tmp =atoi(_risposta);
-            //CONTROLLA RISPOSTA
-            //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E INVIO NUOVA DOMANDA
-            if(tmp == risposta && lock != 1)
+            //Controllo se il messaggio in arrivo inizia col carattere S cioè STOP (client chiuso)
+            if((int)_risposta[0] == 83)                 
             {
-                //Segnalo che un client ha risposto giusto!
-                pthread_mutex_lock(&PLAYER_MUTEX);
-                lock = 1;
-                //comunico che la risposta è corretta
-                printf("Il giocatore %s ha risposto giusto \n",players[giocatore].pid);
-                //aumento punteggio
-                players[giocatore].punteggio +=1;
-                //controllo che il punteggio sia minore rispetto a WIN (punteggio di vittoria)
-                if(players[giocatore].punteggio < WIN){
-                    makeAsk();
-                    
-                    //Invio la nuova domanda a tutti gli altri client!
-                    for(int i=0;i<ACTIVE_PLAYER;i++)
-                        write(players[i].FIFO_game[1],domanda,sizeof(domanda));
-                    pthread_mutex_unlock(&PLAYER_MUTEX);
+                //CANCELLO LE FIFO CHE GESTISCONO IL GIOCO
+                unlink(pathFIFO_ToS[giocatore]);
+                unlink(pathFIFO_ToC[giocatore]);
+                players[giocatore].ritirato = 1;
+                printMessage("Giocatore perso","error");
+                pthread_exit(NULL);
+                
+            }
+            else
+            {
+                
+                printMessage(_risposta,"error");
+                int tmp =atoi(_risposta);
+                //CONTROLLA RISPOSTA
+                //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E INVIO NUOVA DOMANDA
+                if(tmp == risposta && lock != 1)
+                {
+                    //Segnalo che un client ha risposto giusto!
+                    pthread_mutex_lock(&PLAYER_MUTEX);
+                    lock = 1;
+                    //comunico che la risposta è corretta
+                    printf("Il giocatore %s ha risposto giusto \n",players[giocatore].pid);
+                    //aumento punteggio
+                    players[giocatore].punteggio +=1;
+                    //controllo che il punteggio sia minore rispetto a WIN (punteggio di vittoria)
+                    if(players[giocatore].punteggio < WIN){
+                        makeAsk();
+
+                        //Invio la nuova domanda a tutti gli altri client!
+                        for(int i=0;i<ACTIVE_PLAYER;i++)
+                            if(players[i].ritirato != 1)
+                                write(players[i].FIFO_game[1],domanda,sizeof(domanda));
+                        pthread_mutex_unlock(&PLAYER_MUTEX);
+                    }
                 }
+                else  //se la risposta è sbagliata
+                {
+                    pthread_mutex_lock(&PLAYER_MUTEX); //blocco l'accesso alle variabili che modifico tra lock e unlock
+                    players[giocatore].punteggio-=1; //diminuisco il punteggio
+                    write(players[giocatore].FIFO_game[1],"NO\0",3); //segnalo risposta sbagliata
+                    pthread_mutex_unlock(&PLAYER_MUTEX); //sblocco l'accesso alle variabili che modifico tra lock e unlock
+                    printf("Il giocatore %s ha risposto sbagliato \n",players[giocatore].pid);
+                }
+                lock=0;
             }
-            else  //se la risposta è sbagliata
-            {
-                pthread_mutex_lock(&PLAYER_MUTEX); //blocco l'accesso alle variabili che modifico tra lock e unlock
-                players[giocatore].punteggio-=1; //diminuisco il punteggio
-                write(players[giocatore].FIFO_game[1],"NO\0",3); //segnalo risposta sbagliata
-                pthread_mutex_unlock(&PLAYER_MUTEX); //sblocco l'accesso alle variabili che modifico tra lock e unlock
-                printf("Il giocatore %s ha risposto sbagliato \n",players[giocatore].pid);
-            }
-            lock=0;
         }
         
         strcpy(_risposta,"");
@@ -194,10 +212,16 @@ void *gestioneASKandANS(int giocatore){
     pthread_mutex_lock(&PLAYER_MUTEX);
     //scrivo la classifica da mandare
     for(int i=0;i<ACTIVE_PLAYER;i++)
-        write(players[i].FIFO_game[1],classifica,sizeof(classifica));
+        if(players[i].ritirato != 1)
+            write(players[i].FIFO_game[1],classifica,sizeof(classifica));
     pthread_mutex_unlock(&PLAYER_MUTEX);
     free(classifica);
     fine = 1;
+    unlink("fifo_player");
+    for(int i=0;i<ACTIVE_PLAYER;i++){
+        unlink(pathFIFO_ToC[i]);
+        unlink(pathFIFO_ToS[i]);
+    }
     pthread_exit(NULL);
 }
 
@@ -245,7 +269,10 @@ static void signal_handler(){
         write(players[i].FIFO_game[1],"STOP\0",5);
     fine=1;
     pthread_mutex_unlock(&PLAYER_MUTEX);
-    
+    for(int i=0;i<ACTIVE_PLAYER;i++){
+        unlink(pathFIFO_ToC[i]);
+        unlink(pathFIFO_ToS[i]);
+    }
     exit(-1);
 }
 //-----------------------------------------------------------------------

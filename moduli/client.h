@@ -16,11 +16,6 @@ int FIFO_player_CL[2];
 //FIFO partita
 int FIFO_game[2];
 
-//Path FIFO verso Client
-char pathFIFOtoC[20];
-
-//Path FIFO verso Server
-char pathFIFOtoS[20];
 
 //FILE Mode FIFO
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)

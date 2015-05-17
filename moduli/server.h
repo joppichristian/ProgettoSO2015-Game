@@ -16,6 +16,7 @@ struct PLAYER{
     char pid [30];
     int punteggio;
     int FIFO_game [2]; 
+    int ritirato;
 };
 
 //Numero massimo di giocatori collegati al server 
@@ -43,6 +44,9 @@ pthread_t THREAD_CONN;
 //MUTEX sui player
 pthread_mutex_t PLAYER_MUTEX;
 
+//ID thread gioco
+pthread_t THREAD_GAME [10];
+
 //ULTIMA DOMANDA INVIATA
 char domanda [10];
 
@@ -54,6 +58,13 @@ int lock;
 
 //1 QUANDO IL GIOCO TERMINA --> IMPONE AL THREAD DI ASCOLTO GIOCATORI DI TERMINARE
 int fine;
+
+//PATH FIFO_GAME TO S dei vari CLIENT
+char pathFIFO_ToS[10][20];
+
+//PATH FIFO_GAME TO C dei vari CLIENT
+char pathFIFO_ToC[10][20];
+
 
 
 //------------------------------------------------------------------------------
