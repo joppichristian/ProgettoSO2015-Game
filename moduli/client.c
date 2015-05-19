@@ -57,7 +57,7 @@ void *ascoltaServer(){
     char risposta[10];
     sprintf(tmp_pid,"%d",getpid());
     strcat(tmp_pid,"fifo_game_toC");
-    printMessage("Sto ascoltanto le domande dal server","warning");
+    printMessage("I am listening to questions from server..","warning");
     FIFO_game[0] = open(tmp_pid, O_RDONLY );
     while(1){
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
@@ -76,7 +76,8 @@ void *ascoltaServer(){
                     //Controllo se il messaggio in arrivo inizia col carattere < 
                 {                                                       
                     //cioè sto leggendo la classifica finale
-                    printMessage("Classifica:","confirm");
+                    printf("--------------------\n");
+                    printMessage("Rank:","confirm");
                     printMessage(BUFFER,"confirm");
                     pthread_exit(NULL);
                 }
@@ -84,14 +85,16 @@ void *ascoltaServer(){
                     //Controllo se il messaggio in arrivo inizia col carattere S
                 {                                                       
                     //cioè sto leggendo che il server è stato chiuso (STOP)
-                    printMessage("Il Server è stato interrotto","warning");
+                    printMessage("Server interrupted","warning");
                     pthread_exit(NULL);
                 }
                 else
                 {
                     //HO DATO LA RISPOSTA SBAGLIATA!
                     if(strcmp(BUFFER,"NO")==0){
-                        printMessage("Risposta sbagliata","error"); 
+                        printMessage("Wrong answer","error");
+                        //int i = printf("Il punteggio del giocatore %s è %i\n", players[giocatore].pid, players[giocatore].punteggio);
+                        //printf("%i",i);
                         pthread_create(&THREAD_LETTURA,NULL,(void*)&QuestANDAnsw,_domanda);
                     }
                     else
@@ -124,8 +127,8 @@ void* QuestANDAnsw(char *domanda){
 
 //Se viene richiamata stampa il messaggio di warning e rimuove il client dalla lista giocatori
 static void signal_handler(){
-    printMessage("\nIl CLIENT DI GIOCO VIENE CHIUSO","warning");
-    write(FIFO_game[1],"STOP\0",5);
+    printMessage("\nThe client closed the session\n","warning");
+    write(FIFO_game[1],"STOP\n",5);
     exit(-1);
 }
 
