@@ -35,6 +35,9 @@ struct PLAYER players[10];
 //FIFO Giocatori
 int FIFO_player;
 
+//Giocatori online
+int ONLINE_PLAYER;
+
 //FILE Mode FIFO
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 

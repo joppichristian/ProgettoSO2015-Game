@@ -92,6 +92,8 @@ void *listenPlayer(){
                 strcpy(players[ACTIVE_PLAYER].pid,tmp);
                 players[ACTIVE_PLAYER].punteggio = MAX-ACTIVE_PLAYER;
                 players[ACTIVE_PLAYER].ritirato = 1;
+                
+                
                 //Creo la FIFO per la risposta al server
                 strcat(tmp,"fifo_game_toS");
                 mkfifo(tmp,FILE_MODE);
@@ -115,7 +117,10 @@ void *listenPlayer(){
                 
                 //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
                 pthread_create(&THREAD_GAME[ACTIVE_PLAYER],NULL,(void*)&gestioneASKandANS,ACTIVE_PLAYER);
-                ACTIVE_PLAYER++;
+                
+                ONLINE_PLAYER++;                
+                printf("New player joined the game!\n");
+                printf("%d players online\n", ONLINE_PLAYER);
                 
                 //MUTEX UNLOCK
                 pthread_mutex_unlock(&PLAYER_MUTEX);
@@ -157,6 +162,9 @@ void *gestioneASKandANS(int giocatore){
                 unlink(pathFIFO_ToS[giocatore]);
                 unlink(pathFIFO_ToC[giocatore]);
                 players[giocatore].ritirato = 1;
+                ONLINE_PLAYER--;
+                printf("Player left the game!\n");
+                printf("%d players online\n", ONLINE_PLAYER);
                 pthread_exit(NULL);
                 
             }
