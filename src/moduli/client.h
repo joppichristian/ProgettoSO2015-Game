@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/stat.h>
 //-----------------DEFINIZIONI VARIABILI E STRUTTURE --------------------------
 //FIFO giocatori
 int FIFO_player_CL[2];

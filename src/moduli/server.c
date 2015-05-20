@@ -64,6 +64,7 @@ void init(int massimo,int ptg_vittoria){
 
 void *listenPlayer(){
     printMessage("Entering listener player..\nGame is starting..\n","confirm");
+    pthread_mutex_init(&PLAYER_MUTEX, NULL);
     char BUFFER [255];
     char* tmp;
     int FIFO_player_ANSW;

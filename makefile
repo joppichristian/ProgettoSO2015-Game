@@ -46,7 +46,7 @@ test:
 #clean elimina i file temporanei, binari ed assets
 clean:
 	#rm fifo_player
-    rm -rf src/bin
+	rm -rf src/bin
 
 
 

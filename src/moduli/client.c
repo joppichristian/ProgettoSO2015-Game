@@ -55,10 +55,16 @@ void *ascoltaServer(){
     char _domanda[10];
     char tmp_pid [20];
     char risposta[10];
+    char *pathToS = (char*) malloc(20*sizeof(char));
     sprintf(tmp_pid,"%d",getpid());
     strcat(tmp_pid,"fifo_game_toC");
     printMessage("I am listening to questions from server..","warning");
     FIFO_game[0] = open(tmp_pid, O_RDONLY );
+    
+    sprintf(pathToS,"%d",getpid());
+    strcat(pathToS,"fifo_game_toS");
+    FIFO_game[1] = open(pathToS, O_WRONLY);
+    
     while(1){
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
             if (strlen(BUFFER) != 0){
@@ -93,8 +99,6 @@ void *ascoltaServer(){
                     //HO DATO LA RISPOSTA SBAGLIATA!
                     if(strcmp(BUFFER,"NO")==0){
                         printMessage("Wrong answer","error");
-                        //int i = printf("Il punteggio del giocatore %s è %i\n", players[giocatore].pid, players[giocatore].punteggio);
-                        //printf("%i",i);
                         pthread_create(&THREAD_LETTURA,NULL,(void*)&QuestANDAnsw,_domanda);
                     }
                     else
@@ -114,21 +118,19 @@ funzione che prende in input la striga domanda, la mostra in output e attende la
 
 void* QuestANDAnsw(char *domanda){
     char *risposta = (char*)malloc(4*sizeof(char));
-    char *tmp = (char*) malloc(20*sizeof(char));
     fgets(risposta,sizeof(risposta),stdin);
     strcat(risposta,"\0");
-    sprintf(tmp,"%d",getpid());
-    strcat(tmp,"fifo_game_toS");
-    FIFO_game[1] = open(tmp, O_WRONLY);
     write(FIFO_game[1],risposta, sizeof(risposta));
     free(risposta);
-    free(tmp);
+    return NULL;
 }
 
 //Se viene richiamata stampa il messaggio di warning e rimuove il client dalla lista giocatori
 static void signal_handler(){
     printMessage("\nThe client closed the session\n","warning");
     write(FIFO_game[1],"STOP\n",5);
+    printMessage("\nIl CLIENT DI GIOCO VIENE CHIUSO","warning");
+    write(FIFO_game[1],"STOP\0",5);
     exit(-1);
 }
 
