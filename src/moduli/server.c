@@ -29,6 +29,13 @@ void init(int massimo,int ptg_vittoria){
         exit(-1);
     }
     
+     if(signal(SIGHUP, signal_handler) == SIG_ERR)                        
+        //Gestisco le QUIT tramite chiusura terminale richiamando il signal_handler 
+    {
+        printMessage("SERVER ERROR","error");
+        exit(-1);
+    }
+    
     //Creo la FIFO che comunica daClientVersoServer per l'inserimento dei giocatori in partita se non è già stata creata ( server già esistente ), in quel caso stama un messaggio di errore
     if(mkfifo("fifo_player",FILE_MODE))
     {
@@ -116,7 +123,7 @@ void *listenPlayer(){
                 
                 ACTIVE_PLAYER++;
                 ONLINE_PLAYER++;                
-                printf("New player joined the game!\n");
+                printMessage("New player joined the game!","log");
                 printf("%d players online\n", ONLINE_PLAYER);
                 
             }
@@ -129,6 +136,7 @@ void *listenPlayer(){
 
     }
     unlink("fifo_player");
+    free(tmp);
     pthread_exit(NULL);
     
 
@@ -139,10 +147,13 @@ void *listenPlayer(){
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
     char _risposta [30];
+    char message [50];
     players[giocatore].ritirato = 0;
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     //CICLO
     while(players[giocatore].punteggio < WIN){
+        strcpy(message,"");
+        
         //ASPETTA RISPOSTA
         read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta));
         
@@ -171,12 +182,18 @@ void *gestioneASKandANS(int giocatore){
                     lock = 1;
                     //comunico che la risposta è corretta
                     printf("The player %s answered correctly \n",players[giocatore].pid);
+                    
                     //aumento punteggio
                     players[giocatore].punteggio +=1;
+                    
+                     
+                    sprintf(message,"YES...answer is right...your score is %d\0",players[giocatore].punteggio);
+                    write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta giusta
+                    
                     //controllo che il punteggio sia minore rispetto a WIN (punteggio di vittoria)
                     if(players[giocatore].punteggio < WIN){
                         makeAsk();
-
+                        sleep(1);
                         //Invio la nuova domanda a tutti gli altri client!
                         for(int i=0;i<ACTIVE_PLAYER;i++){
                             if(players[i].ritirato != 1)
@@ -187,7 +204,8 @@ void *gestioneASKandANS(int giocatore){
                 else  //se la risposta è sbagliata
                 {
                     players[giocatore].punteggio-=1; //diminuisco il punteggio
-                    write(players[giocatore].FIFO_game[1],"NO\0",3); //segnalo risposta sbagliata
+                    sprintf(message,"NO...answer wrongs...your score is %d\0",players[giocatore].punteggio);
+                    write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta sbagliata
                     printf("The player %s answered wrongly \n",players[giocatore].pid);
                 }
                 lock=0;
@@ -227,6 +245,7 @@ void makeAsk(){
     strcat(domanda,"+");
     sprintf(b,"%d",int_b);
     strcat(domanda,b);
+    strcat(domanda,"\0");
 }
 
 //funzione che crea la classifica da stampare al termine della partita

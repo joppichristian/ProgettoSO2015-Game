@@ -24,6 +24,12 @@ void init_client(){
         exit(-1);
     }
     
+     if(signal(SIGHUP, signal_handler) == SIG_ERR)                        
+        //Gestisco le QUIT tramite chiusura terminale richiamando il signal_handler 
+    {
+        printMessage("SERVER ERROR","error");
+        exit(-1);
+    }
     
     char pid [20];
     char tmp_pid [20];
@@ -78,6 +84,13 @@ void *ascoltaServer(){
                     
                     
                 }
+                 else if((int)BUFFER[0] == 89)                           
+                    //Controllo se il messaggio in arrivo inizia col carattere Y
+                {                                                       
+                    //cioè sto leggendo che ho risposto bene all'ultima domanda
+                    printMessage(BUFFER,"score");
+                }
+                
                 else if((int)BUFFER[0] == 60)                           
                     //Controllo se il messaggio in arrivo inizia col carattere < 
                 {                                                       
@@ -97,8 +110,8 @@ void *ascoltaServer(){
                 else
                 {
                     //HO DATO LA RISPOSTA SBAGLIATA!
-                    if(strcmp(BUFFER,"NO")==0){
-                        printMessage("Wrong answer","error");
+                    if((int)BUFFER[0] == 78){
+                        printMessage(BUFFER,"error");
                         pthread_create(&THREAD_LETTURA,NULL,(void*)&QuestANDAnsw,_domanda);
                     }
                     else
@@ -107,7 +120,7 @@ void *ascoltaServer(){
                     }
                     
                 }
-                strcpy(BUFFER,"\0");
+                strcpy(BUFFER,"");
             }
     }    
 }
