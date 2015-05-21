@@ -87,31 +87,31 @@ void *listenPlayer(){
                     unlink("fifo_player");
                     pthread_exit(NULL);
                 }
-            if(ACTIVE_PLAYER < MAX)
+            if(JOINED_PLAYER < MAX)
             {
                 write(FIFO_player_ANSW,"OK\0",3);
                 
                 //assegno valori alle variabili dei giocatori
-                strcpy(players[ACTIVE_PLAYER].pid,tmp);
-                players[ACTIVE_PLAYER].punteggio = MAX-ACTIVE_PLAYER;
-                players[ACTIVE_PLAYER].ritirato = 1;
+                strcpy(players[JOINED_PLAYER].pid,tmp);
+                players[JOINED_PLAYER].punteggio = MAX-JOINED_PLAYER;
+                players[JOINED_PLAYER].ritirato = 1;
                 
                 
                 //Creo la FIFO per la risposta al server
                 strcat(tmp,"fifo_game_toS");
                 mkfifo(tmp,FILE_MODE);
-                strcpy(pathFIFO_ToS[ACTIVE_PLAYER],tmp);
-                if((players[ACTIVE_PLAYER].FIFO_game[0] = open(tmp,O_RDONLY | O_NONBLOCK))<0)
+                strcpy(pathFIFO_ToS[JOINED_PLAYER],tmp);
+                if((players[JOINED_PLAYER].FIFO_game[0] = open(tmp,O_RDONLY | O_NONBLOCK))<0)
                     perror("FIFO_toS");
                 //
                 
-                strcpy(tmp,players[ACTIVE_PLAYER].pid);
+                strcpy(tmp,players[JOINED_PLAYER].pid);
                 
                 //Creo la FIFO per l'invio della domanda al client
                 strcat(tmp,"fifo_game_toC");
                 mkfifo(tmp,FILE_MODE);
-                strcpy(pathFIFO_ToC[ACTIVE_PLAYER],tmp);
-                players[ACTIVE_PLAYER].FIFO_game[1] = open(tmp,O_WRONLY);
+                strcpy(pathFIFO_ToC[JOINED_PLAYER],tmp);
+                players[JOINED_PLAYER].FIFO_game[1] = open(tmp,O_WRONLY);
                 //
                 
                 //CREA DOMANDA SE NON E' GIA' STATA FATTA
@@ -119,9 +119,9 @@ void *listenPlayer(){
                     makeAsk();
                 
                 //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
-                pthread_create(&THREAD_GAME[ACTIVE_PLAYER],NULL,(void*)&gestioneASKandANS,ACTIVE_PLAYER);
+                pthread_create(&THREAD_GAME[JOINED_PLAYER],NULL,(void*)&gestioneASKandANS,JOINED_PLAYER);
                 
-                ACTIVE_PLAYER++;
+                JOINED_PLAYER++;
                 ONLINE_PLAYER++;                
                 printMessage("New player joined the game!","log");
                 printf("%d players online\n", ONLINE_PLAYER);
@@ -151,11 +151,11 @@ void *gestioneASKandANS(int giocatore){
     players[giocatore].ritirato = 0;
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     //CICLO
-    while(players[giocatore].punteggio < WIN){
+    while(players[giocatore].punteggio < WIN ){
         strcpy(message,"");
         
         //ASPETTA RISPOSTA
-        read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta));
+        while(read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta))==0);
         
         if(strlen(_risposta)!=0){
             //Controllo se il messaggio in arrivo inizia col carattere S cioè STOP (client chiuso)
@@ -168,6 +168,10 @@ void *gestioneASKandANS(int giocatore){
                 ONLINE_PLAYER--;
                 printMessage("Player left the game!","warning");
                 printf("%d players online\n", ONLINE_PLAYER);
+                if(JOINED_PLAYER == MAX && ONLINE_PLAYER ==0){
+                    printMessage("Server is busy and all players are offline...game over","warning");
+                    fine = 1;
+                }
                 pthread_exit(NULL);
                 
             }
@@ -195,7 +199,7 @@ void *gestioneASKandANS(int giocatore){
                         makeAsk();
                         sleep(1);
                         //Invio la nuova domanda a tutti gli altri client!
-                        for(int i=0;i<ACTIVE_PLAYER;i++){
+                        for(int i=0;i<JOINED_PLAYER;i++){
                             if(players[i].ritirato != 1)
                                 write(players[i].FIFO_game[1],domanda,sizeof(domanda));
                         }
@@ -216,16 +220,16 @@ void *gestioneASKandANS(int giocatore){
     }
     
     //quando viene raggiunto il punteggio di vittoria stampo la classifica
-    char *classifica = (char*)malloc((sizeof(char)*20)*(ACTIVE_PLAYER+2));
+    char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+2));
     classifica = makeClassifica();
     //scrivo la classifica da mandare
-    for(int i=0;i<ACTIVE_PLAYER;i++)
+    for(int i=0;i<JOINED_PLAYER;i++)
         if(players[i].ritirato != 1)
-            write(players[i].FIFO_game[1],classifica,255*ACTIVE_PLAYER);
+            write(players[i].FIFO_game[1],classifica,255*JOINED_PLAYER);
     free(classifica);
     fine = 1;
     unlink("fifo_player");
-    for(int i=0;i<ACTIVE_PLAYER;i++){
+    for(int i=0;i<JOINED_PLAYER;i++){
         unlink(pathFIFO_ToC[i]);
         unlink(pathFIFO_ToS[i]);
     }
@@ -251,12 +255,12 @@ void makeAsk(){
 //funzione che crea la classifica da stampare al termine della partita
 char* makeClassifica()
 {
-    char *classifica = (char*)malloc((sizeof(char)*20)*(ACTIVE_PLAYER+2));
+    char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+2));
     char tmp [4];
     strcpy(classifica,"<PLAYER>\t<SCORE>\n  ");
     orderClassifica();
     //concatena pid e punteggio raggiunto dal giocatore
-    for(int i=0;i<ACTIVE_PLAYER;i++)
+    for(int i=0;i<JOINED_PLAYER;i++)
     {
         strcat(classifica,players[i].pid);
         strcat(classifica,"\t\t    ");
@@ -271,10 +275,10 @@ char* makeClassifica()
 static void signal_handler(){
     printMessage("\nServer unexpectly closed","warning");
     unlink("fifo_player");
-    for(int i=0;i<ACTIVE_PLAYER;i++)
+    for(int i=0;i<JOINED_PLAYER;i++)
         write(players[i].FIFO_game[1],"STOP\0",5);
     fine=1;
-    for(int i=0;i<ACTIVE_PLAYER;i++){
+    for(int i=0;i<JOINED_PLAYER;i++){
         unlink(pathFIFO_ToC[i]);
         unlink(pathFIFO_ToS[i]);
     }
@@ -292,8 +296,8 @@ void swap (int a, int b){
 //funzione che ordina la classifica in modo descrescente
 void orderClassifica(){
     
-    for (int i=0;i<ACTIVE_PLAYER;i++){
-        for (int j=i; j<ACTIVE_PLAYER; j++){
+    for (int i=0;i<JOINED_PLAYER;i++){
+        for (int j=i; j<JOINED_PLAYER; j++){
             if (players[i].punteggio < players[j].punteggio){
                 swap (i,j);
             }

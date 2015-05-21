@@ -26,8 +26,8 @@ int MAX;
 //Punteggio di vittoria MIN=10 e MAX=100
 int WIN;
 
-//Giocatori attivi sul server
-int ACTIVE_PLAYER;
+//Giocatori registrati sul server
+int JOINED_PLAYER;
 
 //Lista dei giocatori attivi
 struct PLAYER players[10];

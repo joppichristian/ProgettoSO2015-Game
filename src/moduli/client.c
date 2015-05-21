@@ -75,6 +75,7 @@ void *ascoltaServer(){
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
             if (strlen(BUFFER) != 0){
                 pthread_kill(&THREAD_LETTURA,SIGSTOP);
+                sleep(1);
                 //CONTROLLO CHE IL MESSAGGIO NON SIA UNA COMUNICAZIONE DEL SERVER MA UNA DOMANDA!
                 if(((int)BUFFER[0]) > 47 && (((int)BUFFER[0]) < 58)) {
                     
