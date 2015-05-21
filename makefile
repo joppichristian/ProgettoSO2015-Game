@@ -18,17 +18,17 @@ default:
 
 #all compila tutti i file
 all: clean
-	gcc src/main.c src/moduli/client.c src/moduli/client.h src/moduli/server.c src/moduli/server.h src/moduli/utilities.h src/moduli/utilities.c
+	gcc -std=c99 -pthread src/main.c src/moduli/client.c src/moduli/client.h src/moduli/server.c src/moduli/server.h src/moduli/utilities.h src/moduli/utilities.c
 
 
 #bin genera i binari compilati eseguibili dentro una cartella bin
 bin: clean
 	ls src/bin || mkdir src/bin
 	#if ! [ -d src/bin ]; then mkdir src/bin; fi
-	gcc -c src/moduli/client.c -o src/bin/client.o
-	gcc -c src/moduli/server.c -o src/bin/server.o
-	gcc -c src/moduli/utilities.c -o src/bin/utilities.o 
-	gcc src/main.c src/bin/server.o src/bin/client.o src/bin/utilities.o -o src/bin/main.out
+	gcc -std=c99 -pthread -c src/moduli/client.c -o src/bin/client.o
+	gcc -std=c99 -pthread -c src/moduli/server.c -o src/bin/server.o
+	gcc -std=c99 -pthread -c src/moduli/utilities.c -o src/bin/utilities.o 
+	gcc -std=c99 -pthread src/main.c src/bin/server.o src/bin/client.o src/bin/utilities.o -o src/bin/main.out
 
 
 
