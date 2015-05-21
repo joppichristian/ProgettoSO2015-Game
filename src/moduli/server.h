@@ -45,8 +45,6 @@ int ONLINE_PLAYER;
 //ID thread connessioni
 pthread_t THREAD_CONN;
 
-//MUTEX sui player
-pthread_mutex_t PLAYER_MUTEX;
 
 //ID thread gioco
 pthread_t THREAD_GAME [10];
