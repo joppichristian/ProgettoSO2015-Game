@@ -17,8 +17,7 @@ default:
 
 
 #all compila tutti i file
-all:
-    #make clean
+all: clean
 	gcc src/main.c src/moduli/client.c src/moduli/client.h src/moduli/server.c src/moduli/server.h src/moduli/utilities.h src/moduli/utilities.c
 
 
@@ -34,16 +33,17 @@ bin: clean
 
 
 #assets genera dei file in input dentro la cartella assets
-assets:
-	#make clean
+assets: clean
 
 
 #test genera i binari e gli assets e lancia l’eseguibile per provare i file di input generati da assets
-test:
-	#make clean
+test: clean
 
 
 #clean elimina i file temporanei, binari ed assets
 clean:
-	rm *fifo*
-    #rm -rf src/bin
+	rm -rf src/bin
+    
+#classifica
+score: bin
+	src/bin/main.out | grep "<PLAYER>\t<SCORE>\n"
