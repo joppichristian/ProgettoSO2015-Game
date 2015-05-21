@@ -35,6 +35,9 @@ struct PLAYER players[10];
 //FIFO Giocatori
 int FIFO_player;
 
+//Giocatori online
+int ONLINE_PLAYER;
+
 //FILE Mode FIFO
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 
@@ -42,6 +45,8 @@ int FIFO_player;
 //ID thread connessioni
 pthread_t THREAD_CONN;
 
+//MUTEX sui player
+pthread_mutex_t PLAYER_MUTEX;
 
 //ID thread gioco
 pthread_t THREAD_GAME [10];

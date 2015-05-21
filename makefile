@@ -45,9 +45,5 @@ test:
 
 #clean elimina i file temporanei, binari ed assets
 clean:
-	#rm fifo_player
-	rm -rf src/bin
-
-
-
-	#gcc -c -o /bin/game.o moduli/*.c moduli/*.h main.c
+	rm *fifo*
+    #rm -rf src/bin

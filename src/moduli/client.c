@@ -129,8 +129,8 @@ void* QuestANDAnsw(char *domanda){
 static void signal_handler(){
     printMessage("\nThe client closed the session\n","warning");
     write(FIFO_game[1],"STOP\n",5);
-    printMessage("\nIl CLIENT DI GIOCO VIENE CHIUSO","warning");
-    write(FIFO_game[1],"STOP\0",5);
+//    printMessage("\nIl CLIENT DI GIOCO VIENE CHIUSO","warning");
+//    write(FIFO_game[1],"STOP\0",5);
     exit(-1);
 }
 
