@@ -114,6 +114,7 @@ void *listenPlayer(){
                 //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
                 pthread_create(&THREAD_GAME[ACTIVE_PLAYER],NULL,(void*)&gestioneASKandANS,ACTIVE_PLAYER);
                 
+                ACTIVE_PLAYER++;
                 ONLINE_PLAYER++;                
                 printf("New player joined the game!\n");
                 printf("%d players online\n", ONLINE_PLAYER);
@@ -143,7 +144,7 @@ void *gestioneASKandANS(int giocatore){
     //CICLO
     while(players[giocatore].punteggio < WIN){
         //ASPETTA RISPOSTA
-        while(read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta))==0);
+        read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta));
         
         if(strlen(_risposta)!=0){
             //Controllo se il messaggio in arrivo inizia col carattere S cioè STOP (client chiuso)
@@ -154,15 +155,13 @@ void *gestioneASKandANS(int giocatore){
                 unlink(pathFIFO_ToC[giocatore]);
                 players[giocatore].ritirato = 1;
                 ONLINE_PLAYER--;
-                printf("Player left the game!\n");
+                printMessage("Player left the game!","warning");
                 printf("%d players online\n", ONLINE_PLAYER);
                 pthread_exit(NULL);
                 
             }
             else if( (int)_risposta[0] > 47 && (int)_risposta[0] < 58)
             {
-                
-                printMessage(_risposta,"confirm");
                 int tmp =atoi(_risposta);
                 //CONTROLLA RISPOSTA
                 //SE SI --> BLOCCO GLI ALTRI E AUMENTO IL PUNTEGGIO E INVIO NUOVA DOMANDA
@@ -179,9 +178,10 @@ void *gestioneASKandANS(int giocatore){
                         makeAsk();
 
                         //Invio la nuova domanda a tutti gli altri client!
-                        for(int i=0;i<ACTIVE_PLAYER;i++)
+                        for(int i=0;i<ACTIVE_PLAYER;i++){
                             if(players[i].ritirato != 1)
                                 write(players[i].FIFO_game[1],domanda,sizeof(domanda));
+                        }
                     }
                 }
                 else  //se la risposta è sbagliata

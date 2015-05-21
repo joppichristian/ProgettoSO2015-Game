@@ -82,7 +82,7 @@ void *ascoltaServer(){
                     //Controllo se il messaggio in arrivo inizia col carattere < 
                 {                                                       
                     //cioè sto leggendo la classifica finale
-                    printf("--------------------\n");
+                    printMessage("--------------------","confirm");
                     printMessage("Rank:","confirm");
                     printMessage(BUFFER,"confirm");
                     pthread_exit(NULL);
