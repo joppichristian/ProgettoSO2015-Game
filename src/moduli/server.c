@@ -59,6 +59,8 @@ void init(int massimo,int ptg_vittoria){
         sprintf(tmp2,"%d",WIN);
         strcat(tmp,tmp2);
         printMessage(tmp,"log");    //Stampo la stringa appena creata
+        sleep(1);
+        printf("\nWaiting for players..");
         if((FIFO_player = open("fifo_player",O_RDONLY))<0)
             printMessage("Error opening FIFO", "error");
         pthread_create(&THREAD_CONN,NULL,(void*)&listenPlayer,NULL);
@@ -169,7 +171,7 @@ void *gestioneASKandANS(int giocatore){
                 printMessage("Player left the game!","warning");
                 printf("%d players online\n", ONLINE_PLAYER);
                 if(JOINED_PLAYER == MAX && ONLINE_PLAYER ==0){
-                    printMessage("Server is busy and all players are offline...game over","warning");
+                    printMessage("Server is busy and all players are offline...game over!","warning");
                     fine = 1;
                 }
                 pthread_exit(NULL);
@@ -191,7 +193,7 @@ void *gestioneASKandANS(int giocatore){
                     players[giocatore].punteggio +=1;
                     
                      
-                    sprintf(message,"YES...answer is right...your score is %d\0",players[giocatore].punteggio);
+                    sprintf(message,"YES, right answer! Your score is %d!\0",players[giocatore].punteggio);
                     write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta giusta
                     
                     //controllo che il punteggio sia minore rispetto a WIN (punteggio di vittoria)
@@ -208,7 +210,7 @@ void *gestioneASKandANS(int giocatore){
                 else  //se la risposta è sbagliata
                 {
                     players[giocatore].punteggio-=1; //diminuisco il punteggio
-                    sprintf(message,"NO...answer wrongs...your score is %d\0",players[giocatore].punteggio);
+                    sprintf(message,"NO, wrong answer! Your score is %d!\0",players[giocatore].punteggio);
                     write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta sbagliata
                     printf("The player %s answered wrongly \n",players[giocatore].pid);
                 }
@@ -220,7 +222,7 @@ void *gestioneASKandANS(int giocatore){
     }
     
     //quando viene raggiunto il punteggio di vittoria stampo la classifica
-    char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+2));
+    char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+3));
     classifica = makeClassifica();
     //scrivo la classifica da mandare
     for(int i=0;i<JOINED_PLAYER;i++)
@@ -255,19 +257,25 @@ void makeAsk(){
 //funzione che crea la classifica da stampare al termine della partita
 char* makeClassifica()
 {
-    char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+2));
+    char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+3));
     char tmp [4];
-    strcpy(classifica,"<PLAYER>\t<SCORE>\n  ");
+    strcpy(classifica,"<PLAYER><SCORE>\n  ");
     orderClassifica();
     //concatena pid e punteggio raggiunto dal giocatore
     for(int i=0;i<JOINED_PLAYER;i++)
     {
+        strcat(classifica,"\t");
         strcat(classifica,players[i].pid);
         strcat(classifica,"\t\t    ");
         sprintf(tmp,"%d",players[i].punteggio);
         strcat(classifica,tmp);
         strcat(classifica,"\n  ");
     }
+
+    strcat(classifica,"\n\0");
+    strcat(classifica,">>>>>>>>>THE WINNER IS PLAYER ");
+    strcat(classifica,players[0].pid);
+    strcat(classifica,"!!<<<<<<<<<\n\0");
     strcat(classifica,"\n\0");
     return classifica;
 }

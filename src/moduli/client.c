@@ -64,6 +64,8 @@ void *ascoltaServer(){
     char *pathToS = (char*) malloc(20*sizeof(char));
     sprintf(tmp_pid,"%d",getpid());
     strcat(tmp_pid,"fifo_game_toC");
+    printMessage("Game started! \t\tPress CTRL-C to quit.","log");
+    sleep(1);
     printMessage("I am listening to questions from server..","warning");
     FIFO_game[0] = open(tmp_pid, O_RDONLY );
     
@@ -96,7 +98,7 @@ void *ascoltaServer(){
                     //Controllo se il messaggio in arrivo inizia col carattere < 
                 {                                                       
                     //cioè sto leggendo la classifica finale
-                    printMessage("--------------------","confirm");
+                    printMessage("\n>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<\n","confirm");
                     printMessage("Rank:","confirm");
                     printMessage(BUFFER,"confirm");
                     pthread_exit(NULL);

@@ -18,17 +18,16 @@ default:
 
 #all compila tutti i file
 all: clean
-	gcc -std=c99 -pthread src/main.c src/moduli/client.c src/moduli/client.h src/moduli/server.c src/moduli/server.h src/moduli/utilities.h src/moduli/utilities.c
+	-@gcc -std=c99 -pthread src/main.c src/moduli/client.c src/moduli/client.h src/moduli/server.c src/moduli/server.h src/moduli/utilities.h src/moduli/utilities.c
 
 
 #bin genera i binari compilati eseguibili dentro una cartella bin
 bin: clean
-	ls src/bin || mkdir src/bin
-	#if ! [ -d src/bin ]; then mkdir src/bin; fi
-	gcc -std=c99 -pthread -c src/moduli/client.c -o src/bin/client.o
-	gcc -std=c99 -pthread -c src/moduli/server.c -o src/bin/server.o
-	gcc -std=c99 -pthread -c src/moduli/utilities.c -o src/bin/utilities.o 
-	gcc -std=c99 -pthread src/main.c src/bin/server.o src/bin/client.o src/bin/utilities.o -o src/bin/main.out
+	-@mkdir bin
+	-@gcc -std=c99 -pthread -c src/moduli/client.c -o bin/client.o
+	-@gcc -std=c99 -pthread -c src/moduli/server.c -o bin/server.o
+	-@gcc -std=c99 -pthread -c src/moduli/utilities.c -o bin/utilities.o 
+	-@gcc -std=c99 -pthread src/main.c bin/server.o bin/client.o bin/utilities.o -o bin/multiplayer.out
 
 
 
@@ -40,10 +39,24 @@ assets: clean
 test: clean
 
 
+
+
+
+
 #clean elimina i file temporanei, binari ed assets
+.PHONY: clean
 clean:
-	rm -rf src/bin
+	-@rm -r -f bin
+    
+    
+    
+    
     
 #classifica
-score: bin
-	src/bin/main.out | grep "<PLAYER>\t<SCORE>\n"
+#score: bin
+#-@src/bin/main.out | grep "<PLAYER>\t<SCORE>\n"
+
+
+
+#-@ls bin || mkdir bin
+#if ! [ -d bin ]; then mkdir bin; fi
