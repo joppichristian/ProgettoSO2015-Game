@@ -7,7 +7,7 @@
 //inizializza il server impostando il numero massimo di giocatori e il punteggio di vittoria
 void init(int massimo,int ptg_vittoria){
     lock = 0; //semaforo per modifica di variabili condivise
-    fine = 0; //semaforo per modifica di variabili condivise
+    fine = 0; 
     strcpy(domanda,"");
     risposta = 0;
     
@@ -59,8 +59,7 @@ void init(int massimo,int ptg_vittoria){
         sprintf(tmp2,"%d",WIN);
         strcat(tmp,tmp2);
         printMessage(tmp,"log");    //Stampo la stringa appena creata
-        sleep(1);
-        printf("\nWaiting for players..");
+        printMessage("\nWaiting for players..","log");
         if((FIFO_player = open("fifo_player",O_RDONLY))<0)
             printMessage("Error opening FIFO", "error");
         pthread_create(&THREAD_CONN,NULL,(void*)&listenPlayer,NULL);
@@ -231,6 +230,7 @@ void *gestioneASKandANS(int giocatore){
     free(classifica);
     fine = 1;
     unlink("fifo_player");
+    
     for(int i=0;i<JOINED_PLAYER;i++){
         unlink(pathFIFO_ToC[i]);
         unlink(pathFIFO_ToS[i]);
@@ -259,14 +259,13 @@ char* makeClassifica()
 {
     char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+3));
     char tmp [4];
-    strcpy(classifica,"<PLAYER><SCORE>\n  ");
+    strcpy(classifica,"<PLAYER>\t<SCORE>\n  ");
     orderClassifica();
     //concatena pid e punteggio raggiunto dal giocatore
     for(int i=0;i<JOINED_PLAYER;i++)
     {
-        strcat(classifica,"\t");
         strcat(classifica,players[i].pid);
-        strcat(classifica,"\t\t    ");
+        strcat(classifica,"\t\t  ");
         sprintf(tmp,"%d",players[i].punteggio);
         strcat(classifica,tmp);
         strcat(classifica,"\n  ");

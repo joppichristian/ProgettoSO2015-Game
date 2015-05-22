@@ -74,10 +74,10 @@ void *ascoltaServer(){
     FIFO_game[1] = open(pathToS, O_WRONLY);
     
     while(1){
+        sleep(1);
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
             if (strlen(BUFFER) != 0){
                 pthread_kill(&THREAD_LETTURA,SIGSTOP);
-                sleep(1);
                 //CONTROLLO CHE IL MESSAGGIO NON SIA UNA COMUNICAZIONE DEL SERVER MA UNA DOMANDA!
                 if(((int)BUFFER[0]) > 47 && (((int)BUFFER[0]) < 58)) {
                     
@@ -98,9 +98,9 @@ void *ascoltaServer(){
                     //Controllo se il messaggio in arrivo inizia col carattere < 
                 {                                                       
                     //cioè sto leggendo la classifica finale
-                    printMessage("\n>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<\n","confirm");
-                    printMessage("Rank:","confirm");
-                    printMessage(BUFFER,"confirm");
+                    printMessage("\n>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<\n","score");
+                    printMessage("Rank:","score");
+                    printMessage(BUFFER,"score");
                     pthread_exit(NULL);
                 }
                 else if((int)BUFFER[0] == 83)                           
