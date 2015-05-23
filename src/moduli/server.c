@@ -125,12 +125,15 @@ void *listenPlayer(){
                 JOINED_PLAYER++;
                 ONLINE_PLAYER++;                
                 printMessage("New player joined the game!","log");
-                printf("%d players online\n", ONLINE_PLAYER);
+                char * message_tmp = (char*)malloc(20*sizeof(char));
+                sprintf(message_tmp,"%d players online",ONLINE_PLAYER);
+                printMessage(message_tmp,"log");
+                free(message_tmp);
                 
             }
             else
             {
-                printMessage("QUEUE IS FULL.\n","error");
+                printMessage("QUEUE IS FULL","error");
                 write(FIFO_player_ANSW,"NO\0",3);
             }
         }
@@ -147,8 +150,9 @@ void *listenPlayer(){
 
 void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
-    char _risposta [30];
+    char _risposta [60];
     char message [50];
+    char * message_tmp = (char*)malloc(20*sizeof(char));
     players[giocatore].ritirato = 0;
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     //CICLO
@@ -156,7 +160,7 @@ void *gestioneASKandANS(int giocatore){
         strcpy(message,"");
         
         //ASPETTA RISPOSTA
-        while(read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta))==0);
+        read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta));
         
         if(strlen(_risposta)!=0){
             //Controllo se il messaggio in arrivo inizia col carattere S cioè STOP (client chiuso)
@@ -168,7 +172,11 @@ void *gestioneASKandANS(int giocatore){
                 players[giocatore].ritirato = 1;
                 ONLINE_PLAYER--;
                 printMessage("Player left the game!","warning");
-                printf("%d players online\n", ONLINE_PLAYER);
+                
+                sprintf(message_tmp,"%d players online", ONLINE_PLAYER);
+                printMessage(message_tmp,"log");
+                strcpy(message_tmp,"");
+                
                 if(JOINED_PLAYER == MAX && ONLINE_PLAYER ==0){
                     printMessage("Server is busy and all players are offline...game over!","warning");
                     fine = 1;
@@ -186,8 +194,9 @@ void *gestioneASKandANS(int giocatore){
                     //Segnalo che un client ha risposto giusto!
                     lock = 1;
                     //comunico che la risposta è corretta
-                    printf("The player %s answered correctly \n",players[giocatore].pid);
-                    
+                    sprintf(message_tmp,"The player %s answered correctly \n",players[giocatore].pid);
+                    printMessage(message_tmp,"confirm");
+                    strcpy(message_tmp,"");
                     //aumento punteggio
                     players[giocatore].punteggio +=1;
                     
@@ -209,9 +218,21 @@ void *gestioneASKandANS(int giocatore){
                 else  //se la risposta è sbagliata
                 {
                     players[giocatore].punteggio-=1; //diminuisco il punteggio
+                    if(players[giocatore].punteggio == 0)
+                    {
+                        players[giocatore].ritirato = 1; 
+                        write(players[giocatore].FIFO_game[1],"E\0",2); //segnalo eliminazione
+                        unlink(pathFIFO_ToS[giocatore]);
+                        unlink(pathFIFO_ToC[giocatore]);
+                        pthread_exit(NULL);
+                    }
                     sprintf(message,"NO, wrong answer! Your score is %d!\0",players[giocatore].punteggio);
                     write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta sbagliata
-                    printf("The player %s answered wrongly \n",players[giocatore].pid);
+                    sprintf(message_tmp,"The player %s answered wrongly \n",players[giocatore].pid);
+                    printMessage(message_tmp,"error");
+                    strcpy(message_tmp,"");
+                    
+                   
                 }
                 lock=0;
             }
@@ -219,7 +240,7 @@ void *gestioneASKandANS(int giocatore){
         
         strcpy(_risposta,"");
     }
-    
+    free(message_tmp);
     //quando viene raggiunto il punteggio di vittoria stampo la classifica
     char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+3));
     classifica = makeClassifica();
@@ -279,6 +300,7 @@ char* makeClassifica()
     return classifica;
 }
 
+//gestore dei segnali...viene richiamato quando viene inviato un INTERRUPT o un QUIT del terminale
 static void signal_handler(){
     printMessage("\nServer unexpectly closed","warning");
     unlink("fifo_player");
@@ -300,7 +322,7 @@ void swap (int a, int b){
     players[b]=tmp;
 }
 
-//funzione che ordina la classifica in modo descrescente
+//funzione che ordina la classifica in modo descrescente secondo il punteggio
 void orderClassifica(){
     
     for (int i=0;i<JOINED_PLAYER;i++){

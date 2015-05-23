@@ -110,6 +110,13 @@ void *ascoltaServer(){
                     printMessage("Server interrupted","warning");
                     pthread_exit(NULL);
                 }
+                else if((int)BUFFER[0] == 69)                           
+                    //Controllo se il messaggio in arrivo inizia col carattere E
+                {                                                       
+                    //cioè sto leggendo che il server mi ha eliminato (ELIMINATE)
+                    printMessage("Sei stato eliminato...hai raggiunto il punteggio 0","warning");
+                    pthread_exit(NULL);
+                }
                 else
                 {
                     //HO DATO LA RISPOSTA SBAGLIATA!
