@@ -1,6 +1,6 @@
 a.out
-moduli/client.h.gch
-moduli/server.h.gch
-moduli/utilities.h.gch
+src/moduli/client.h.gch
+src/moduli/server.h.gch
+src/moduli/utilities.h.gch
 a.out.dSYM
 bin/*
