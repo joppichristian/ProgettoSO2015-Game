@@ -7,11 +7,9 @@ default:
 	@echo "MAKEFILE COMMANDS:"
 	@echo "you can use the following options:"
 	@echo ""
-	@echo ""     ALL
 	@echo "- without target it generates a list with description of make options"
+	@echo "- "make all" compiles .c and .h files "
 	@echo "- "make bin" generates executable binary in an automatically generated folder named "bin" "
-	@echo "- "make assets" generates possible input files in an automatically generated folder named "assets" "
-	@echo "- "make test" generates binary files and assets and runs executable for testing generated input files"
 	@echo "- "make clean" deletes temporary files, binary files and assets"
 	@echo ""
 	@echo ""
@@ -35,18 +33,8 @@ bin: clean
 	-@gcc -std=c99 -pthread -w -w src/main.c bin/server.o bin/client.o bin/utilities.o -o bin/multiplayer.out
 
 
-
-#assets genera dei file in input dentro la cartella assets
-assets: clean
-
-
-
-#test genera i binari e gli assets e lancia l’eseguibile per provare i file di input generati da assets
-test: clean
-
-
-
 #clean elimina i file temporanei, binari ed assets
+#Phony dice che nella funzione non viene prodotto un file
 .PHONY: clean
 clean:
 	-@rm -r -f bin
