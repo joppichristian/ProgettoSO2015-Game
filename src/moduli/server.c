@@ -144,7 +144,6 @@ void *listenPlayer(){
 
     }
     unlink("fifo_player");
-    free(tmp);
     pthread_exit(NULL);
     
 
@@ -163,7 +162,7 @@ void *gestioneASKandANS(int giocatore){
     //CICLO
     while(players[giocatore].punteggio < WIN ){
         strcpy(message,"");
-        
+        sleep(1);
         //ASPETTA RISPOSTA
         read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta));
         
@@ -252,6 +251,7 @@ void *gestioneASKandANS(int giocatore){
     char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+3));
     classifica = makeClassifica();
     //scrivo la classifica da mandare
+    sleep(1);
     for(int i=0;i<JOINED_PLAYER;i++)
         if(players[i].ritirato != 1)
             write(players[i].FIFO_game[1],classifica,255*JOINED_PLAYER);
