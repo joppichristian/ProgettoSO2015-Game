@@ -140,7 +140,7 @@ funzione che prende in input la striga domanda, la mostra in output e attende la
 
 void* QuestANDAnsw(char *domanda){
     char *risposta = (char*)malloc(4*sizeof(char));
-    fgets(risposta,sizeof(risposta),stdin);
+    scanf("%s",risposta);
     strcat(risposta,"\0");
     write(FIFO_game[1],risposta, sizeof(risposta));
     free(risposta);

@@ -77,7 +77,6 @@ void init(int massimo,int ptg_vittoria){
 void *listenPlayer(){
     printMessage("Entering listener player..\nGame is starting..\n","confirm");
     char BUFFER [255];
-    char* tmp;
     int FIFO_player_ANSW;
     while(fine==0){
         strcpy(BUFFER,"");
@@ -129,11 +128,9 @@ void *listenPlayer(){
                 JOINED_PLAYER++;
                 ONLINE_PLAYER++;                
                 printMessage("\nNew player joined the game!","log");
-                char * message_tmp = (char*)malloc(20*sizeof(char));
+                char message_tmp[255];
                 sprintf(message_tmp,"%d players online",ONLINE_PLAYER);
-                printMessage(message_tmp,"log");
-                free(message_tmp);
-                
+                printMessage(message_tmp,"log");         
             }
             else
             {
@@ -156,7 +153,7 @@ void *gestioneASKandANS(int giocatore){
    //INVIA DOMANDA
     char _risposta [60];
     char message [50];
-    char * message_tmp = (char*)malloc(20*sizeof(char));
+    char message_tmp[255];
     players[giocatore].ritirato = 0;
     write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     //CICLO
@@ -229,7 +226,9 @@ void *gestioneASKandANS(int giocatore){
                         printMessage(message_tmp,"warning");
                         unlink(pathFIFO_ToS[giocatore]);
                         unlink(pathFIFO_ToC[giocatore]);
+                        ONLINE_PLAYER--;
                         pthread_exit(NULL);
+                        
                     }
                     sprintf(message,"NO, wrong answer! Your score is %d! ",players[giocatore].punteggio);
                     write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta sbagliata
@@ -245,16 +244,15 @@ void *gestioneASKandANS(int giocatore){
         
         strcpy(_risposta,"");
     }
-    free(message_tmp);
     //quando viene raggiunto il punteggio di vittoria stampo la classifica
-    char *classifica = (char*)malloc((sizeof(char)*20)*(JOINED_PLAYER+3));
-    classifica = makeClassifica();
+    char classifica [2000];
+    strcpy(classifica,makeClassifica());
     //scrivo la classifica da mandare
     sleep(1);
     for(int i=0;i<JOINED_PLAYER;i++)
         if(players[i].ritirato != 1)
             write(players[i].FIFO_game[1],classifica,255*JOINED_PLAYER);
-    free(classifica);
+
     fine = 1;
     unlink("fifo_player");
     
