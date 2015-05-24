@@ -21,7 +21,7 @@ default:
 #all compila tutti i file
 #con aggiunta -w per rendere più comoda l'esecuzione
 all: clean
-	-@gcc -std=c99 -pthread src/main.c src/moduli/client.c src/moduli/client.h src/moduli/server.c src/moduli/server.h src/moduli/utilities.h src/moduli/utilities.c
+	-@gcc -std=c99 -pthread -w src/main.c src/moduli/client.c src/moduli/client.h src/moduli/server.c src/moduli/server.h src/moduli/utilities.h src/moduli/utilities.c
 
 
 
@@ -29,10 +29,10 @@ all: clean
 #con aggiunta -w per rendere più comoda l'esecuzione
 bin: clean
 	-@ls bin || mkdir bin
-	-@gcc -std=c99 -pthread -c src/moduli/client.c -o bin/client.o
-	-@gcc -std=c99 -pthread -c src/moduli/server.c -o bin/server.o
-	-@gcc -std=c99 -pthread -c src/moduli/utilities.c -o bin/utilities.o 
-	-@gcc -std=c99 -pthread -w src/main.c bin/server.o bin/client.o bin/utilities.o -o bin/multiplayer.out
+	-@gcc -std=c99 -pthread -c -w src/moduli/client.c -o bin/client.o
+	-@gcc -std=c99 -pthread -c -w src/moduli/server.c -o bin/server.o
+	-@gcc -std=c99 -pthread -c -w src/moduli/utilities.c -o bin/utilities.o 
+	-@gcc -std=c99 -pthread -w -w src/main.c bin/server.o bin/client.o bin/utilities.o -o bin/multiplayer.out
 
 
 
