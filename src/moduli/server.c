@@ -6,7 +6,7 @@
 
 //inizializza il server impostando il numero massimo di giocatori e il punteggio di vittoria
 void init(int massimo,int ptg_vittoria){
-    lock = 0; //semaforo per modifica di variabili condivise
+    lock = 0; //variabile impostata a 1 appena un client risponde giusto 
     fine = 0; 
     strcpy(domanda,"");
     risposta = 0;
