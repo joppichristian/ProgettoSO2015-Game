@@ -74,7 +74,6 @@ void *ascoltaServer(){
     FIFO_game[1] = open(pathToS, O_WRONLY);
     
     while(1){
-        sleep(1);
         read(FIFO_game[0], BUFFER, sizeof(BUFFER));
             if (strlen(BUFFER) != 0){
                 pthread_kill(&THREAD_LETTURA,SIGSTOP);

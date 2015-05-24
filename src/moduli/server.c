@@ -162,7 +162,6 @@ void *gestioneASKandANS(int giocatore){
     //CICLO
     while(players[giocatore].punteggio < WIN ){
         strcpy(message,"");
-        sleep(1);
         //ASPETTA RISPOSTA
         read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta));
         
