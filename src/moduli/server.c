@@ -60,6 +60,7 @@ void init(int massimo,int ptg_vittoria){
         strcat(tmp,tmp2);
         printMessage(tmp,"log");    //Stampo la stringa appena creata
         printMessage("\nWaiting for players..","log");
+        sleep(1);
         if((FIFO_player = open("fifo_player",O_RDONLY))<0)
             printMessage("Error opening FIFO", "error");
         pthread_create(&THREAD_CONN,NULL,(void*)&listenPlayer,NULL);
@@ -123,7 +124,7 @@ void *listenPlayer(){
                     makeAsk();
                 
                 //CREO THREAD PER INVIO DOMANDE E ATTESA RISPOSTE CLIENT
-                pthread_create(&THREAD_GAME[JOINED_PLAYER],NULL,(void*)&gestioneASKandANS,&JOINED_PLAYER);
+                pthread_create(&THREAD_GAME[JOINED_PLAYER],NULL,(void*)&gestioneASKandANS,JOINED_PLAYER);
                 
                 JOINED_PLAYER++;
                 ONLINE_PLAYER++;                
@@ -151,28 +152,29 @@ void *listenPlayer(){
 
 //funzione che gestisce domande e risposte
 
-void *gestioneASKandANS(int *giocatore){
+void *gestioneASKandANS(int giocatore){
+    
    //INVIA DOMANDA
     char _risposta [60];
     char message [50];
     char * message_tmp = (char*)malloc(20*sizeof(char));
-    players[*giocatore].ritirato = 0;
-    write(players[*giocatore].FIFO_game[1],domanda,sizeof(domanda));
+    players[giocatore].ritirato = 0;
+    write(players[giocatore].FIFO_game[1],domanda,sizeof(domanda));
     //CICLO
-    while(players[*giocatore].punteggio < WIN ){
+    while(players[giocatore].punteggio < WIN ){
         strcpy(message,"");
         
         //ASPETTA RISPOSTA
-        read(players[*giocatore].FIFO_game[0],_risposta,sizeof(risposta));
+        read(players[giocatore].FIFO_game[0],_risposta,sizeof(risposta));
         
         if(strlen(_risposta)!=0){
             //Controllo se il messaggio in arrivo inizia col carattere S cioè STOP (client chiuso)
             if((int)_risposta[0] == 83)                 
             {
                 //CANCELLO LE FIFO CHE GESTISCONO IL GIOCO
-                unlink(pathFIFO_ToS[*giocatore]);
-                unlink(pathFIFO_ToC[*giocatore]);
-                players[*giocatore].ritirato = 1;
+                unlink(pathFIFO_ToS[giocatore]);
+                unlink(pathFIFO_ToC[giocatore]);
+                players[giocatore].ritirato = 1;
                 ONLINE_PLAYER--;
                 printMessage("Player left the game!","warning");
                 
@@ -197,18 +199,18 @@ void *gestioneASKandANS(int *giocatore){
                     //Segnalo che un client ha risposto giusto!
                     lock = 1;
                     //comunico che la risposta è corretta
-                    sprintf(message_tmp,"Player %s answered correctly \n",players[*giocatore].pid);
+                    sprintf(message_tmp,"Player %s answered correctly \n",players[giocatore].pid);
                     printMessage(message_tmp,"confirm");
                     strcpy(message_tmp,"");
                     //aumento punteggio
-                    players[*giocatore].punteggio +=1;
+                    players[giocatore].punteggio +=1;
                     
                      
-                    sprintf(message,"YES, right answer! Your score is %d! ",players[*giocatore].punteggio);
-                    write(players[*giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta giusta
+                    sprintf(message,"YES, right answer! Your score is %d! ",players[giocatore].punteggio);
+                    write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta giusta
                     
                     //controllo che il punteggio sia minore rispetto a WIN (punteggio di vittoria)
-                    if(players[*giocatore].punteggio < WIN){
+                    if(players[giocatore].punteggio < WIN){
                         makeAsk();
                         sleep(1);
                         //Invio la nuova domanda a tutti gli altri client!
@@ -220,20 +222,20 @@ void *gestioneASKandANS(int *giocatore){
                 }
                 else  //se la risposta è sbagliata
                 {
-                    players[*giocatore].punteggio-=1; //diminuisco il punteggio
-                    if(players[*giocatore].punteggio == 0)
+                    players[giocatore].punteggio-=1; //diminuisco il punteggio
+                    if(players[giocatore].punteggio == 0)
                     {
-                        players[*giocatore].ritirato = 1; 
-                        write(players[*giocatore].FIFO_game[1],"E\0",2); //segnalo eliminazione
-                        sprintf(message_tmp,"Player %s lost the game!\n", players[*giocatore].pid);
+                        players[giocatore].ritirato = 1; 
+                        write(players[giocatore].FIFO_game[1],"E\0",2); //segnalo eliminazione
+                        sprintf(message_tmp,"Player %s lost the game!\n", players[giocatore].pid);
                         printMessage(message_tmp,"warning");
-                        unlink(pathFIFO_ToS[*giocatore]);
-                        unlink(pathFIFO_ToC[*giocatore]);
+                        unlink(pathFIFO_ToS[giocatore]);
+                        unlink(pathFIFO_ToC[giocatore]);
                         pthread_exit(NULL);
                     }
-                    sprintf(message,"NO, wrong answer! Your score is %d! ",players[*giocatore].punteggio);
-                    write(players[*giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta sbagliata
-                    sprintf(message_tmp,"Player %s answered wrongly \n",players[*giocatore].pid);
+                    sprintf(message,"NO, wrong answer! Your score is %d! ",players[giocatore].punteggio);
+                    write(players[giocatore].FIFO_game[1],message,sizeof(message)); //segnalo risposta sbagliata
+                    sprintf(message_tmp,"Player %s answered wrongly \n",players[giocatore].pid);
                     printMessage(message_tmp,"error");
                     strcpy(message_tmp,"");
                     
